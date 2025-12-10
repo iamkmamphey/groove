@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KM Percussion Groove Loops - Mobile App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: white;
+            --text-primary: #333;
+            --text-secondary: #999;
+            --border-color: #f0f0f0;
+            --gradient-start: #667eea;
+            --gradient-end: #764ba2;
+            --body-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --waveform-color: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            --shadow: rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #999;
+            --border-color: #3d3d3d;
+            --body-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --waveform-color: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            --shadow: rgba(0, 0, 0, 0.3);
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--body-bg);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        
+        .phone-mockup {
+            width: 375px;
+            background: #000;
+            border-radius: 40px;
+            border: 12px solid #000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #1a1a1a;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 30px 30px;
+            z-index: 10;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 812px;
+            background: var(--bg-primary);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            transition: background 0.3s ease;
+        }
+        
+        .screen::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .screen::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .screen::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: white;
+            padding: 20px 15px 30px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease;
+        }
+        
+        .app-header h1 {
+            font-size: 1.3em;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+        
+        .app-header p {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+        
+        .instruments-container {
+            padding: 15px;
+        }
+        
+        .instrument-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .instrument-card:active {
+            transform: scale(0.98);
+        }
+        
+        .instrument-card.playing {
+            border: 2px solid var(--gradient-start);
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .instrument-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .card-title {
+            flex: 1;
+        }
+        
+        .card-title h3 {
+            font-size: 1em;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .card-title p {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+        
+        .card-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .bpm-control {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .bpm-control button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .bpm-control button:active {
+            transform: scale(0.95);
+        }
+        
+        .bpm-display {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 40px;
+            text-align: center;
+            font-size: 0.95em;
+        }
+        
+        .bpm-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .playback-controls {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        
+        .control-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .control-btn.play {
+            font-size: 1.3em;
+        }
+        
+        .control-btn.playing {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+        
+        .volume-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        
+        .volume-slider input[type="range"] {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border-color);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        
+        .volume-slider input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gradient-start);
+            cursor: pointer;
+        }
+        
+        .volume-slider input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gradient-start);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .volume-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            min-width: 30px;
+        }
+        
+        .waveform-display {
+            background: var(--bg-primary);
+            border-radius: 6px;
+            height: 40px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        
+        .waveform-bar {
+            width: 3px;
+            background: var(--waveform-color);
+            border-radius: 2px;
+        }
+        
+        .instrument-card.playing .waveform-bar {
+            animation: wave 0.6s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% {
+                height: 8px;
+            }
+            50% {
+                height: 30px;
+            }
+        }
+        
+        .waveform-bar:nth-child(1) { animation-delay: 0s; }
+        .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+        .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+        .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+        .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+        .waveform-bar:nth-child(6) { animation-delay: 0.5s; }
+        .waveform-bar:nth-child(7) { animation-delay: 0.6s; }
+        .waveform-bar:nth-child(8) { animation-delay: 0.7s; }
+        
+        .info-section {
+            text-align: center;
+            padding: 20px 15px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-mockup">
+        <div class="screen">
+            <!-- Theme Toggle Button (Inside Phone) -->
+            <div style="position: fixed; top: 35px; right: 25px; z-index: 20; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 10px; cursor: pointer; font-size: 1em; transition: all 0.3s ease; box-shadow: 0 2px 8px var(--shadow);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</div>
+            
+            <!-- App Header -->
+            <div class="app-header" style="padding: 0; background: none; box-shadow: none;">
+                <img src="http://localhost:8000/Loop%20App1.png" alt="Loop App Banner" style="width: 100%; height: auto; display: block;">
+            </div>
+            
+            <!-- Instruments -->
+            <div class="instruments-container">
+                <!-- Tambourine Card -->
+                <div class="instrument-card">
+                    <div class="card-header">
+                        <div class="instrument-icon">🥁</div>
+                        <div class="card-title">
+                            <h3>Tambourine</h3>
+                            <p>Audio groove.mp3</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-controls">
+                        <div class="bpm-control">
+                            <button onclick="changeBPM(this, -1)">−</button>
+                            <div>
+                                <div class="bpm-display">120</div>
+                                <div class="bpm-label">BPM</div>
+                            </div>
+                            <button onclick="changeBPM(this, 1)">+</button>
+                        </div>
+                        
+                        <div class="playback-controls">
+                            <button class="control-btn">⏮</button>
+                            <button class="control-btn play" onclick="togglePlay(this)">▶</button>
+                            <button class="control-btn">⟲</button>
+                        </div>
+                    </div>
+                    
+                    <div class="waveform-display">
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                    </div>
+                    
+                    <div class="volume-slider">
+                        <span style="font-size: 0.8em;">🔊</span>
+                        <input type="range" min="0" max="100" value="90">
+                        <div class="volume-label">90%</div>
+                    </div>
+                </div>
+                
+                <!-- Gome Card -->
+                <div class="instrument-card">
+                    <div class="card-header">
+                        <div class="instrument-icon">🎶</div>
+                        <div class="card-title">
+                            <h3>Gome - 1</h3>
+                            <p>Audio groove.mp3</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-controls">
+                        <div class="bpm-control">
+                            <button onclick="changeBPM(this, -1)">−</button>
+                            <div>
+                                <div class="bpm-display">120</div>
+                                <div class="bpm-label">BPM</div>
+                            </div>
+                            <button onclick="changeBPM(this, 1)">+</button>
+                        </div>
+                        
+                        <div class="playback-controls">
+                            <button class="control-btn">⏮</button>
+                            <button class="control-btn play" onclick="togglePlay(this)">▶</button>
+                            <button class="control-btn">⟲</button>
+                        </div>
+                    </div>
+                    
+                    <div class="waveform-display">
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                    </div>
+                    
+                    <div class="volume-slider">
+                        <span style="font-size: 0.8em;">🔊</span>
+                        <input type="range" min="0" max="100" value="90">
+                        <div class="volume-label">90%</div>
+                    </div>
+                </div>
+                
+                <!-- Claves Card -->
+                <div class="instrument-card">
+                    <div class="card-header">
+                        <div class="instrument-icon">🪕</div>
+                        <div class="card-title">
+                            <h3>Claves</h3>
+                            <p>Audio groove.mp3</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-controls">
+                        <div class="bpm-control">
+                            <button onclick="changeBPM(this, -1)">−</button>
+                            <div>
+                                <div class="bpm-display">120</div>
+                                <div class="bpm-label">BPM</div>
+                            </div>
+                            <button onclick="changeBPM(this, 1)">+</button>
+                        </div>
+                        
+                        <div class="playback-controls">
+                            <button class="control-btn">⏮</button>
+                            <button class="control-btn play" onclick="togglePlay(this)">▶</button>
+                            <button class="control-btn">⟲</button>
+                        </div>
+                    </div>
+                    
+                    <div class="waveform-display">
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                        <div class="waveform-bar"></div>
+                    </div>
+                    
+                    <div class="volume-slider">
+                        <span style="font-size: 0.8em;">🔊</span>
+                        <input type="range" min="0" max="100" value="90">
+                        <div class="volume-label">90%</div>
+                    </div>
+                </div>
+                
+                <!-- Info Section -->
+                <div class="info-section">
+                    <p><span class="status-indicator"></span>Connected to Groove API</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Synchronized audio playback system
+        const audioEngine = {
+            masterTime: 0,
+            isPlaying: false,
+            bpm: 120,
+            playingSounds: new Set(),
+            
+            start() {
+                this.isPlaying = true;
+                this.masterTime = 0;
+                this.animate();
+            },
+            
+            stop() {
+                this.isPlaying = false;
+                this.playingSounds.clear();
+            },
+            
+            animate() {
+                if (!this.isPlaying) return;
+                this.masterTime += 16; // ~60fps
+                requestAnimationFrame(() => this.animate());
+            },
+            
+            addSound(instrumentName) {
+                this.playingSounds.add(instrumentName);
+                if (!this.isPlaying) this.start();
+            },
+            
+            removeSound(instrumentName) {
+                this.playingSounds.delete(instrumentName);
+                if (this.playingSounds.size === 0) this.stop();
+            }
+        };
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const toggle = document.querySelector('.theme-toggle');
+            if (document.body.classList.contains('dark-mode')) {
+                toggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                toggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        // Load saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️';
+        }
+        
+        function changeBPM(button, change) {
+            const card = button.closest('.instrument-card');
+            const bpmDisplay = card.querySelector('.bpm-display');
+            let currentBPM = parseInt(bpmDisplay.textContent);
+            currentBPM = Math.max(40, Math.min(240, currentBPM + change * 5));
+            bpmDisplay.textContent = currentBPM;
+            button.style.transform = 'scale(0.9)';
+            setTimeout(() => button.style.transform = '', 100);
+        }
+        
+        function togglePlay(button) {
+            const card = button.closest('.instrument-card');
+            const instrumentName = card.querySelector('.card-title h3').textContent;
+            const playBtn = button;
+            
+            if (playBtn.textContent === '▶') {
+                // Start playing
+                playBtn.textContent = '⏸';
+                playBtn.classList.add('playing');
+                card.classList.add('playing');
+                audioEngine.addSound(instrumentName);
+                
+                // Simulate audio with a longer loop
+                console.log(`🎵 ${instrumentName} started playing in sync`);
+            } else {
+                // Stop playing
+                playBtn.textContent = '▶';
+                playBtn.classList.remove('playing');
+                card.classList.remove('playing');
+                audioEngine.removeSound(instrumentName);
+                
+                console.log(`⏹️ ${instrumentName} stopped`);
+            }
+        }
+        
+        // Update volume label when slider changes
+        document.querySelectorAll('.volume-slider input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const label = e.target.parentElement.querySelector('.volume-label');
+                label.textContent = e.target.value + '%';
+            });
+        });
+        
+        // Log active sounds periodically
+        setInterval(() => {
+            if (audioEngine.playingSounds.size > 0) {
+                console.log(`🔊 Currently playing: ${Array.from(audioEngine.playingSounds).join(', ')}`);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

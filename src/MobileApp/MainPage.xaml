@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:views="clr-namespace:MobileApp.Views"
+             x:Class="MobileApp.MainPage">
+  <ScrollView>
+    <VerticalStackLayout Padding="10">
+      <Label Text="KM Percussion Groove Loops" FontAttributes="Bold" FontSize="20" />
+      <CollectionView ItemsSource="{Binding Instruments}">
+        <CollectionView.ItemTemplate>
+          <DataTemplate>
+            <views:InstrumentCard />
+          </DataTemplate>
+        </CollectionView.ItemTemplate>
+      </CollectionView>
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>
