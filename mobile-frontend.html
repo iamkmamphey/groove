@@ -78,6 +78,7 @@
             overflow-y: auto;
             scroll-behavior: smooth;
             transition: background 0.3s ease;
+            position: relative;
         }
         
         .screen::-webkit-scrollbar {
@@ -118,6 +119,9 @@
         
         .instruments-container {
             padding: 15px;
+            /* Optimized for large datasets (2000+ instruments) */
+            /* Use virtual scrolling or pagination for production */
+            will-change: scroll-position;
         }
         
         .instrument-card {
@@ -128,6 +132,8 @@
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
+            /* Performance optimization for large lists */
+            contain: layout style paint;
         }
         
         .instrument-card:active {
@@ -147,16 +153,7 @@
         }
         
         .instrument-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8em;
-            color: white;
-            flex-shrink: 0;
+            display: none;
         }
         
         .card-title {
@@ -300,6 +297,78 @@
             min-width: 30px;
         }
         
+        .equalizer-container {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        
+        .equalizer-title {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .equalizer-bands {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 80px;
+        }
+        
+        .eq-band {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .eq-slider {
+            writing-mode: bt-lr;
+            -webkit-appearance: slider-vertical;
+            width: 4px;
+            height: 60px;
+            background: var(--border-color);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gradient-start);
+            cursor: pointer;
+        }
+        
+        .eq-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gradient-start);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .eq-label {
+            font-size: 0.65em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .eq-value {
+            font-size: 0.6em;
+            color: var(--text-secondary);
+            min-width: 25px;
+            text-align: center;
+        }
+        
         .waveform-display {
             background: var(--bg-primary);
             border-radius: 6px;
@@ -361,27 +430,260 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        
+        .search-section {
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-bar {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .search-bar:focus {
+            border-color: var(--gradient-start);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-section {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .time-signature-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            padding: 6px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+        
+        .filter-chip.active {
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: white;
+            border-color: var(--gradient-start);
+        }
+        
+        .alphabet-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .alphabet-btn {
+            width: 26px;
+            height: 26px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-size: 0.7em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .alphabet-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .alphabet-btn.active {
+            background: var(--gradient-start);
+            color: white;
+            border-color: var(--gradient-start);
+        }
+        
+        .category-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .master-eq-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: white;
+            border: none;
+            font-size: 1.3em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .master-eq-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .master-eq-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 200;
+            max-height: 70%;
+            overflow-y: auto;
+        }
+        
+        .master-eq-panel.open {
+            transform: translateY(0);
+        }
+        
+        .eq-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .eq-panel-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+        
+        .time-signature-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--gradient-start);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 6px;
+        }
     </style>
 </head>
 <body>
     <div class="phone-mockup">
         <div class="screen">
-            <!-- Theme Toggle Button (Inside Phone) -->
-            <div style="position: fixed; top: 35px; right: 25px; z-index: 20; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 10px; cursor: pointer; font-size: 1em; transition: all 0.3s ease; box-shadow: 0 2px 8px var(--shadow);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</div>
+            <!-- Top Controls Bar -->
+            <div style="position: absolute; top: 10px; left: 15px; right: 15px; z-index: 20; display: flex; justify-content: space-between; align-items: center;">
+                <!-- Subscribe Button -->
+                <div class="subscribe-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none; border-radius: 20px; padding: 6px 12px; cursor: pointer; font-size: 0.85em; color: white; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(255,107,107,0.3);" onclick="window.location.href='subscription.html'" title="Subscribe Now">
+                    ⭐ Subscribe
+                </div>
+                
+                <!-- Theme Toggle Button -->
+                <div class="theme-toggle" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 10px; cursor: pointer; font-size: 1em; transition: all 0.3s ease; box-shadow: 0 2px 8px var(--shadow);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</div>
+            </div>
             
             <!-- App Header -->
-            <div class="app-header" style="padding: 0; background: none; box-shadow: none;">
+            <div class="app-header" style="padding: 50px 0 0 0; background: none; box-shadow: none;">
                 <img src="http://localhost:8000/Loop%20App1.png" alt="Loop App Banner" style="width: 100%; height: auto; display: block;">
+            </div>
+            
+            <!-- Search and Filter Section -->
+            <div class="search-section">
+                <input type="text" class="search-bar" id="searchBar" placeholder="🔍 Search instruments..." onkeyup="filterInstruments()">
+                
+                <div class="filter-section">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div class="category-label">Time Signature</div>
+                            <select id="timeSignatureSelect" class="search-bar" style="padding: 8px 12px; cursor: pointer;" onchange="filterByTimeSignature(this.value)">
+                                <option value="all">All Time Signatures</option>
+                                <option value="4/4">4/4 - Common Time</option>
+                                <option value="3/4">3/4 - Waltz Time</option>
+                                <option value="2/4">2/4 - March Time</option>
+                                <option value="6/8">6/8 - Compound</option>
+                                <option value="5/4">5/4 - Irregular</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="category-label">Browse A-Z</div>
+                            <select id="alphabetSelect" class="search-bar" style="padding: 8px 12px; cursor: pointer;" onchange="filterByLetter(this.value)">
+                                <option value="all">All Instruments</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 10px; align-items: end;">
+                        <div>
+                            <div class="category-label">Metronome</div>
+                            <div style="display: flex; gap: 8px; align-items: center; background: var(--bg-primary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <button onclick="adjustMetronome(-5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">−</button>
+                                <div style="flex: 1; text-align: center;">
+                                    <div id="metronomeBPM" style="font-size: 1.2em; font-weight: 600; color: var(--text-primary);">120</div>
+                                    <div style="font-size: 0.7em; color: var(--text-secondary);">BPM</div>
+                                </div>
+                                <button onclick="adjustMetronome(5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">+</button>
+                                <button id="metronomeToggle" onclick="toggleMetronome()" style="width: 32px; height: 32px; border: none; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 1.1em;">▶</button>
+                            </div>
+                        </div>
+                        <button class="master-eq-btn" onclick="toggleMasterEQ()" title="Master Equalizer" style="position: static; width: 48px; height: 48px; flex-shrink: 0;">🎚️</button>
+                    </div>
+                </div>
             </div>
             
             <!-- Instruments -->
             <div class="instruments-container">
                 <!-- Tambourine Card -->
-                <div class="instrument-card">
+                <div class="instrument-card" data-name="Tambourine" data-time-signature="4/4">
                     <div class="card-header">
                         <div class="instrument-icon">🥁</div>
                         <div class="card-title">
-                            <h3>Tambourine</h3>
+                            <h3>Tambourine <span class="time-signature-badge">4/4</span></h3>
                             <p>Audio groove.mp3</p>
                         </div>
                     </div>
@@ -415,18 +717,18 @@
                     </div>
                     
                     <div class="volume-slider">
-                        <span style="font-size: 0.8em;">🔊</span>
+                        <span style="font-size: 1em;">🔊</span>
                         <input type="range" min="0" max="100" value="90">
-                        <div class="volume-label">90%</div>
+                        <span class="volume-label">90%</span>
                     </div>
                 </div>
                 
                 <!-- Gome Card -->
-                <div class="instrument-card">
+                <div class="instrument-card" data-name="Gome - 1" data-time-signature="3/4">
                     <div class="card-header">
                         <div class="instrument-icon">🎶</div>
                         <div class="card-title">
-                            <h3>Gome - 1</h3>
+                            <h3>Gome - 1 <span class="time-signature-badge">3/4</span></h3>
                             <p>Audio groove.mp3</p>
                         </div>
                     </div>
@@ -467,11 +769,11 @@
                 </div>
                 
                 <!-- Claves Card -->
-                <div class="instrument-card">
+                <div class="instrument-card" data-name="Claves" data-time-signature="2/4">
                     <div class="card-header">
-                        <div class="instrument-icon">🪕</div>
+                        <div class="instrument-icon">🎵</div>
                         <div class="card-title">
-                            <h3>Claves</h3>
+                            <h3>Claves <span class="time-signature-badge">2/4</span></h3>
                             <p>Audio groove.mp3</p>
                         </div>
                     </div>
@@ -512,8 +814,53 @@
                 </div>
                 
                 <!-- Info Section -->
-                <div class="info-section">
+                <div class="info-section" style="padding-bottom: 20px;">
                     <p><span class="status-indicator"></span>Connected to Groove API</p>
+                    <p style="margin-top: 10px; font-size: 0.85em; color: var(--text-secondary);">Created By <strong style="color: var(--gradient-start);">FAMYANK</strong></p>
+                </div>
+            </div>
+            
+            <!-- Master EQ Panel (Inside Frame) -->
+            <div class="master-eq-panel" id="masterEQPanel">
+                <div class="eq-panel-header">
+                    <div class="eq-panel-title">🎚️ Master Equalizer</div>
+                    <button class="close-btn" onclick="toggleMasterEQ()">✕</button>
+                </div>
+                
+                <div class="equalizer-container" style="background: var(--bg-primary); margin-top: 0;">
+                    <div class="equalizer-title">Global EQ (affects all instruments)</div>
+                    <div class="equalizer-bands">
+                        <div class="eq-band">
+                            <input type="range" class="eq-slider master-eq-slider" min="-12" max="12" value="0" orient="vertical" data-freq="60">
+                            <div class="eq-label">60Hz</div>
+                            <div class="eq-value">0dB</div>
+                        </div>
+                        <div class="eq-band">
+                            <input type="range" class="eq-slider master-eq-slider" min="-12" max="12" value="0" orient="vertical" data-freq="250">
+                            <div class="eq-label">250Hz</div>
+                            <div class="eq-value">0dB</div>
+                        </div>
+                        <div class="eq-band">
+                            <input type="range" class="eq-slider master-eq-slider" min="-12" max="12" value="0" orient="vertical" data-freq="1k">
+                            <div class="eq-label">1kHz</div>
+                            <div class="eq-value">0dB</div>
+                        </div>
+                        <div class="eq-band">
+                            <input type="range" class="eq-slider master-eq-slider" min="-12" max="12" value="0" orient="vertical" data-freq="4k">
+                            <div class="eq-label">4kHz</div>
+                            <div class="eq-value">0dB</div>
+                        </div>
+                        <div class="eq-band">
+                            <input type="range" class="eq-slider master-eq-slider" min="-12" max="12" value="0" orient="vertical" data-freq="16k">
+                            <div class="eq-label">16kHz</div>
+                            <div class="eq-value">0dB</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button style="flex: 1; padding: 12px; border: none; background: var(--bg-primary); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="resetMasterEQ()">Reset</button>
+                    <button style="flex: 1; padding: 12px; border: none; background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="applyMasterEQ()">Apply</button>
                 </div>
             </div>
         </div>
@@ -616,12 +963,224 @@
             });
         });
         
+        // Update equalizer value displays when sliders change
+        document.querySelectorAll('.eq-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const valueDisplay = e.target.parentElement.querySelector('.eq-value');
+                valueDisplay.textContent = (value > 0 ? '+' : '') + value + 'dB';
+                
+                // Log EQ change
+                const freq = e.target.dataset.freq;
+                console.log(`🎚️ EQ ${freq}Hz: ${value}dB`);
+            });
+        });
+        
         // Log active sounds periodically
         setInterval(() => {
             if (audioEngine.playingSounds.size > 0) {
                 console.log(`🔊 Currently playing: ${Array.from(audioEngine.playingSounds).join(', ')}`);
             }
         }, 3000);
+        
+        // Subscription and trial management
+        function checkSubscriptionStatus() {
+            const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+            const trialStart = localStorage.getItem('trialStartDate');
+            
+            if (!trialStart) {
+                // First time user - start trial
+                localStorage.setItem('trialStartDate', new Date().toISOString());
+                showTrialWelcome();
+                return true;
+            }
+            
+            if (isSubscribed) {
+                return true; // User has active subscription
+            }
+            
+            // Check trial days remaining
+            const startDate = new Date(trialStart);
+            const currentDate = new Date();
+            const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+            const daysRemaining = Math.max(0, 7 - daysPassed);
+            
+            if (daysRemaining === 0) {
+                // Trial expired - redirect to subscription page
+                window.location.href = 'subscription.html?from=app';
+                return false;
+            }
+            
+            // Show trial reminder
+            if (daysRemaining <= 3) {
+                showTrialReminder(daysRemaining);
+            }
+            
+            return true;
+        }
+        
+        function showTrialWelcome() {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position: fixed; top: 50px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; max-width: 320px;';
+            banner.innerHTML = `
+                <strong>🎉 Welcome!</strong><br>
+                <span style="font-size: 0.9em;">Your 7-day free trial has started</span>
+            `;
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 4000);
+        }
+        
+        function showTrialReminder(daysLeft) {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; max-width: 320px; cursor: pointer;';
+            banner.innerHTML = `
+                <strong>⏱️ Trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}</strong><br>
+                <span style="font-size: 0.9em;">Tap to subscribe now →</span>
+            `;
+            banner.onclick = () => window.location.href = 'subscription.html';
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 5000);
+        }
+        
+        // Check subscription on page load
+        window.addEventListener('load', () => {
+            checkSubscriptionStatus();
+            initializeAlphabetNav();
+        });
+        
+        // Master EQ Panel Toggle
+        function toggleMasterEQ() {
+            const panel = document.getElementById('masterEQPanel');
+            panel.classList.toggle('open');
+        }
+        
+        function applyMasterEQ() {
+            console.log('🎚️ Master EQ applied');
+            toggleMasterEQ(); // Close the panel
+        }
+        
+        function resetMasterEQ() {
+            document.querySelectorAll('.master-eq-slider').forEach(slider => {
+                slider.value = 0;
+                const valueDisplay = slider.parentElement.querySelector('.eq-value');
+                valueDisplay.textContent = '0dB';
+            });
+            console.log('🎚️ Master EQ reset to flat');
+        }
+        
+        // Search and Filter Functions
+        let currentTimeSignature = 'all';
+        let currentLetter = 'all';
+        
+        function filterInstruments() {
+            const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+            const cards = document.querySelectorAll('.instrument-card');
+            
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const timeSignature = card.dataset.timeSignature;
+                
+                const matchesSearch = name.includes(searchTerm);
+                const matchesTimeSignature = currentTimeSignature === 'all' || timeSignature === currentTimeSignature;
+                const matchesLetter = currentLetter === 'all' || name.charAt(0) === currentLetter.toLowerCase();
+                
+                if (matchesSearch && matchesTimeSignature && matchesLetter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterByTimeSignature(signature) {
+            currentTimeSignature = signature;
+            filterInstruments();
+        }
+        
+        function filterByLetter(letter) {
+            currentLetter = letter;
+            filterInstruments();
+        }
+        
+        function initializeAlphabetNav() {
+            const alphabetSelect = document.getElementById('alphabetSelect');
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            
+            alphabet.forEach(letter => {
+                const option = document.createElement('option');
+                option.value = letter;
+                option.textContent = letter;
+                alphabetSelect.appendChild(option);
+            });
+        }
+        
+        // Metronome functionality
+        let metronomeBPM = 120;
+        let metronomeInterval = null;
+        let metronomeActive = false;
+        
+        function adjustMetronome(change) {
+            metronomeBPM = Math.max(40, Math.min(240, metronomeBPM + change));
+            document.getElementById('metronomeBPM').textContent = metronomeBPM;
+            
+            // Restart metronome if active
+            if (metronomeActive) {
+                stopMetronome();
+                startMetronome();
+            }
+        }
+        
+        function toggleMetronome() {
+            const btn = document.getElementById('metronomeToggle');
+            if (metronomeActive) {
+                stopMetronome();
+                btn.textContent = '▶';
+                btn.style.background = 'var(--bg-secondary)';
+                btn.style.color = 'var(--text-secondary)';
+            } else {
+                startMetronome();
+                btn.textContent = '⏸';
+                btn.style.background = 'linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%)';
+                btn.style.color = 'white';
+            }
+        }
+        
+        function startMetronome() {
+            metronomeActive = true;
+            const interval = (60 / metronomeBPM) * 1000;
+            
+            // Play click sound (simulated)
+            playMetronomeClick();
+            
+            metronomeInterval = setInterval(() => {
+                playMetronomeClick();
+            }, interval);
+            
+            console.log(`🎵 Metronome started at ${metronomeBPM} BPM`);
+        }
+        
+        function stopMetronome() {
+            metronomeActive = false;
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+                metronomeInterval = null;
+            }
+            console.log('🎵 Metronome stopped');
+        }
+        
+        function playMetronomeClick() {
+            // Visual feedback
+            const bpmDisplay = document.getElementById('metronomeBPM');
+            bpmDisplay.style.transform = 'scale(1.1)';
+            bpmDisplay.style.color = 'var(--gradient-start)';
+            setTimeout(() => {
+                bpmDisplay.style.transform = 'scale(1)';
+                bpmDisplay.style.color = 'var(--text-primary)';
+            }, 100);
+            
+            // In a real app, play actual metronome sound here
+            console.log('🔔 Click');
+        }
     </script>
 </body>
 </html>

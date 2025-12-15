@@ -452,7 +452,7 @@
             <a class="nav-link active" onclick="showSection('dashboard')">Dashboard</a>
             <a class="nav-link" onclick="showSection('instruments')">Instruments</a>
             <a class="nav-link" onclick="showSection('upload')">Upload Audio</a>
-            <a class="nav-link" onclick="showSection('waveform')">Waveforms</a>
+            <a class="nav-link" onclick="showSection('waveform')">Edit Wave</a>
         </nav>
         
         <main>
@@ -470,7 +470,7 @@
                     </div>
                     <div class="stat-box">
                         <div class="number">0</div>
-                        <div class="label">Waveforms Generated</div>
+                        <div class="label">Audio Edits Made</div>
                     </div>
                 </div>
                 
@@ -540,9 +540,22 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="bpm">Default BPM (Detected from audio)</label>
-                    <input type="number" id="bpm" placeholder="Detecting BPM..." value="" min="40" max="240">
-                    <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Upload an audio file to automatically detect its BPM. Adjust as needed for your taste.</p>
+                    <label for="bpm">Tempo (BPM - Auto-detected)</label>
+                    <input type="number" id="bpm" placeholder="Detecting tempo..." value="" min="40" max="240" readonly style="background: #f5f5f5;">
+                    <p style="color: #999; font-size: 0.9em; margin-top: 5px;">🤖 Automatically detected from audio analysis</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="timeSignature">Time Signature (Auto-detected)</label>
+                    <select id="timeSignature" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; background: #f5f5f5;" disabled>
+                        <option value="">Detecting time signature...</option>
+                        <option value="4/4">4/4 - Common Time</option>
+                        <option value="3/4">3/4 - Waltz Time</option>
+                        <option value="2/4">2/4 - March Time</option>
+                        <option value="6/8">6/8 - Compound</option>
+                        <option value="5/4">5/4 - Irregular</option>
+                    </select>
+                    <p style="color: #999; font-size: 0.9em; margin-top: 5px;">🤖 Automatically categorized by rhythm analysis</p>
                 </div>
                 
                 <div class="form-group">
@@ -561,17 +574,6 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="audioImage">Audio Thumbnail Image (PNG, JPG)</label>
-                    <div class="upload-area" id="uploadImageArea" style="min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <p style="margin-bottom: 10px; font-size: 2.5em;">🖼️</p>
-                        <p><strong>Drop your image here</strong></p>
-                        <p style="color: #999; margin-top: 5px;">or click to select (PNG, JPG)</p>
-                        <input type="file" id="audioImage" accept="image/png,image/jpeg" style="display: none;">
-                    </div>
-                    <div id="imagePreview" style="margin-top: 15px;"></div>
-                </div>
-                
-                <div class="form-group">
                     <label for="description">Description</label>
                     <textarea id="description" placeholder="Optional: Describe this instrument..." rows="3"></textarea>
                 </div>
@@ -584,15 +586,15 @@
                 <div id="uploadMessage"></div>
             </section>
             
-            <!-- Waveform Section -->
+            <!-- Edit Wave Section -->
             <section id="waveform" class="section">
-                <h2>Waveform Generator</h2>
+                <h2>🎚️ Edit Wave - Audio Editor</h2>
                 <p style="margin-bottom: 20px; color: #666;">
-                    Generate waveform images from uploaded audio files. This helps visualize the audio patterns.
+                    Professional audio editing tools. Trim, adjust volume, apply effects, and normalize your audio files.
                 </p>
                 
                 <div class="form-group">
-                    <label for="waveformAudio">Select Audio File for Waveform</label>
+                    <label for="waveformAudio">Select Audio File to Edit</label>
                     <select id="waveformAudio" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
                         <option>Select an instrument...</option>
                         <option value="1">Tambourine - /Audio groove.mp3</option>
@@ -601,24 +603,74 @@
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="waveformWidth">Waveform size</label>
-                    <input type="text" id="waveformWidth" placeholder="e.g., 14KB, 2.5MB" value="14KB" readonly>
+                <div style="background: #f5f5f5; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 3em; color: #667eea;">🎵</div>
+                        <p style="color: #666; font-weight: 600; margin-top: 10px;">Audio Waveform Visualization</p>
+                        <p style="color: #999; font-size: 0.9em;">Duration: 00:03:45 | Size: 14KB</p>
+                    </div>
+                    <div style="height: 80px; background: linear-gradient(to right, #667eea, #764ba2); border-radius: 4px; position: relative; overflow: hidden;">
+                        <div style="position: absolute; inset: 0; background: repeating-linear-group(90deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 11px);"></div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="trimStart">Trim Start (seconds)</label>
+                        <input type="number" id="trimStart" placeholder="0.00" value="0" min="0" step="0.1">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="trimEnd">Trim End (seconds)</label>
+                        <input type="number" id="trimEnd" placeholder="225.00" value="225" min="0" step="0.1">
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="waveformHeight">Waveform length</label>
-                    <input type="text" id="waveformHeight" placeholder="HH:MM:SS" value="00:03:45" pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}">
+                    <label for="volumeAdjust">Volume Adjustment</label>
+                    <input type="range" id="volumeAdjust" min="-20" max="20" value="0" step="1" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; color: #999; font-size: 0.85em; margin-top: 5px;">
+                        <span>-20dB</span>
+                        <span id="volumeValue" style="font-weight: 600; color: #667eea;">0dB</span>
+                        <span>+20dB</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Audio Effects</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="normalize" style="margin-right: 8px;">
+                            <span>Normalize Audio</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="fadeIn" style="margin-right: 8px;">
+                            <span>Fade In (1s)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="fadeOut" style="margin-right: 8px;">
+                            <span>Fade Out (1s)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" id="removeNoise" style="margin-right: 8px;">
+                            <span>Remove Noise</span>
+                        </label>
+                    </div>
+                </div>
                 </div>
                 
                 <div class="button-group">
-                    <button onclick="generateWaveform()">🌊 Generate Waveform</button>
+                    <button onclick="applyAudioEdits()">💾 Apply Edits</button>
+                    <button class="btn-secondary" onclick="exportAudio()">📥 Export Audio</button>
                 </div>
                 
-                <div id="waveformMessage"></div>
-                <div id="waveformPreview" style="margin-top: 30px;"></div>
+                <div id="editMessage" style="margin-top: 15px;"></div>
             </section>
         </main>
+        
+        <footer style="text-align: center; padding: 20px; color: white; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <p style="font-size: 0.9em;">Created By <strong style="font-size: 1.1em;">FAMYANK</strong></p>
+            <p style="font-size: 0.8em; margin-top: 5px; opacity: 0.8;">© 2025 Groove Loop App - All Rights Reserved</p>
+        </footer>
     </div>
     
     <script>
@@ -643,11 +695,8 @@
         // Upload area functionality
         const uploadArea = document.getElementById('uploadArea');
         const audioFile = document.getElementById('audioFile');
-        const uploadImageArea = document.getElementById('uploadImageArea');
-        const audioImage = document.getElementById('audioImage');
         
         uploadArea.addEventListener('click', () => audioFile.click());
-        uploadImageArea.addEventListener('click', () => audioImage.click());
         
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -668,27 +717,7 @@
             }
         });
         
-        uploadImageArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadImageArea.style.background = '#f0f0ff';
-        });
-        
-        uploadImageArea.addEventListener('dragleave', () => {
-            uploadImageArea.style.background = '#f9f9f9';
-        });
-        
-        uploadImageArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadImageArea.style.background = '#f9f9f9';
-            
-            if (e.dataTransfer.files.length) {
-                audioImage.files = e.dataTransfer.files;
-                updateImagePreview();
-            }
-        });
-        
         audioFile.addEventListener('change', updateUploadAreaText);
-        audioImage.addEventListener('change', updateImagePreview);
         
         function updateUploadAreaText() {
             if (audioFile.files.length) {
@@ -699,39 +728,55 @@
             }
         }
         
-        function updateImagePreview() {
-            if (audioImage.files.length) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.getElementById('imagePreview');
-                    preview.innerHTML = `
-                        <div style="text-align: center;">
-                            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <p style="color: #999; font-size: 0.9em; margin-top: 10px;">✅ Image: ${audioImage.files[0].name}</p>
-                        </div>
-                    `;
-                };
-                reader.readAsDataURL(audioImage.files[0]);
-                
-                uploadImageArea.innerHTML = `<p style="font-size: 2em; margin-bottom: 10px;">✅</p><p><strong>${audioImage.files[0].name}</strong></p><p style="color: #999; margin-top: 5px;">Click to change image</p>`;
-            }
-        }
-        
         function detectAudioBPM(audioFile) {
             const bpmInput = document.getElementById('bpm');
+            const timeSignatureSelect = document.getElementById('timeSignature');
+            
             bpmInput.placeholder = 'Analyzing audio...';
             bpmInput.value = '';
+            timeSignatureSelect.value = '';
             
-            // Simulate BPM detection delay (in a real app, this would analyze the audio)
+            // Simulate audio analysis (in production, use Web Audio API for real analysis)
             setTimeout(() => {
-                // Simulated BPM values based on file characteristics
+                // Simulated tempo detection
                 const simulatedBPMs = [90, 100, 105, 110, 115, 120, 125, 128, 130, 135, 140, 145];
-                const randomBPM = simulatedBPMs[Math.floor(Math.random() * simulatedBPMs.length)];
+                const detectedBPM = simulatedBPMs[Math.floor(Math.random() * simulatedBPMs.length)];
                 
-                bpmInput.value = randomBPM;
-                bpmInput.placeholder = 'BPM detected from audio';
-                showMessage('uploadMessage', `✅ BPM detected: ${randomBPM} BPM - Adjust as needed for your taste`, 'success');
-            }, 1500);
+                // Simulated time signature detection based on rhythm patterns
+                const timeSignatures = ['4/4', '3/4', '2/4', '6/8', '5/4'];
+                const probabilities = [0.6, 0.2, 0.1, 0.08, 0.02]; // 4/4 is most common
+                let rand = Math.random();
+                let detectedTimeSignature = '4/4';
+                
+                for (let i = 0; i < timeSignatures.length; i++) {
+                    if (rand < probabilities.slice(0, i + 1).reduce((a, b) => a + b, 0)) {
+                        detectedTimeSignature = timeSignatures[i];
+                        break;
+                    }
+                }
+                
+                bpmInput.value = detectedBPM;
+                timeSignatureSelect.value = detectedTimeSignature;
+                
+                showMessage('uploadMessage', 
+                    `✅ Audio Analysis Complete:<br>
+                    <strong>Tempo:</strong> ${detectedBPM} BPM<br>
+                    <strong>Time Signature:</strong> ${detectedTimeSignature}<br>
+                    <strong>Category:</strong> ${getCategoryName(detectedTimeSignature)}`, 
+                    'success'
+                );
+            }, 2000);
+        }
+        
+        function getCategoryName(timeSignature) {
+            const categories = {
+                '4/4': 'Common Time',
+                '3/4': 'Waltz Time',
+                '2/4': 'March Time',
+                '6/8': 'Compound',
+                '5/4': 'Irregular'
+            };
+            return categories[timeSignature] || 'Unknown';
         }
         
         function handleUpload() {
@@ -797,6 +842,58 @@
             const element = document.getElementById(elementId);
             const className = type === 'error' ? 'error-message' : 'success-message';
             element.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        // Audio editing functions
+        function applyAudioEdits() {
+            const audioSelect = document.getElementById('waveformAudio');
+            const trimStart = document.getElementById('trimStart').value;
+            const trimEnd = document.getElementById('trimEnd').value;
+            const volumeAdjust = document.getElementById('volumeAdjust').value;
+            const normalize = document.getElementById('normalize').checked;
+            const fadeIn = document.getElementById('fadeIn').checked;
+            const fadeOut = document.getElementById('fadeOut').checked;
+            const removeNoise = document.getElementById('removeNoise').checked;
+            
+            if (!audioSelect.value || audioSelect.value === 'Select an instrument...') {
+                showMessage('editMessage', '⚠️ Please select an audio file to edit', 'error');
+                return;
+            }
+            
+            showMessage('editMessage', '⏳ Processing audio edits...', 'success');
+            
+            setTimeout(() => {
+                const effects = [];
+                if (normalize) effects.push('Normalize');
+                if (fadeIn) effects.push('Fade In');
+                if (fadeOut) effects.push('Fade Out');
+                if (removeNoise) effects.push('Noise Reduction');
+                
+                const effectsText = effects.length > 0 ? `<br><strong>Effects:</strong> ${effects.join(', ')}` : '';
+                
+                showMessage('editMessage', 
+                    `✅ Audio edits applied successfully!<br>
+                    <strong>Trim:</strong> ${trimStart}s - ${trimEnd}s<br>
+                    <strong>Volume:</strong> ${volumeAdjust > 0 ? '+' : ''}${volumeAdjust}dB${effectsText}`, 
+                    'success'
+                );
+            }, 2000);
+        }
+        
+        function exportAudio() {
+            showMessage('editMessage', '📥 Exporting edited audio file...', 'success');
+            setTimeout(() => {
+                showMessage('editMessage', '✅ Audio exported successfully! Check your downloads folder.', 'success');
+            }, 1500);
+        }
+        
+        // Volume slider update
+        const volumeSlider = document.getElementById('volumeAdjust');
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                document.getElementById('volumeValue').textContent = (value > 0 ? '+' : '') + value + 'dB';
+            });
         }
         
         // Login functionality

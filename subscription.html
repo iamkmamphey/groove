@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove Loop - Subscription</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .subscription-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 1em;
+        }
+        
+        .trial-badge {
+            background: #4caf50;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        .content {
+            padding: 30px 25px;
+        }
+        
+        .subscription-status {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .subscription-status.active {
+            background: #d4edda;
+            border: 2px solid #4caf50;
+        }
+        
+        .subscription-status.trial {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        
+        .subscription-status.expired {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .status-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .status-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .status-message {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .days-left {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .pricing-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .pricing-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        
+        .price-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .price {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .price-period {
+            color: #999;
+            font-size: 1em;
+        }
+        
+        .features-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .features-list li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .features-list li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .payment-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 2px solid #2196F3;
+        }
+        
+        .payment-section h3 {
+            color: #1565c0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .zelle-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .zelle-info p {
+            margin: 8px 0;
+            color: #333;
+        }
+        
+        .zelle-number {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #1976d2;
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .payment-steps {
+            color: #1565c0;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .payment-steps ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .payment-steps li {
+            margin: 8px 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .success-message, .error-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success-message.show, .error-message.show {
+            display: block;
+        }
+        
+        .footer-links {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 0.9em;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="subscription-container">
+        <div class="header">
+            <h1>🎵 Groove Loop App</h1>
+            <p>Premium Percussion Loops</p>
+            <div class="trial-badge">7-Day Free Trial</div>
+        </div>
+        
+        <div class="content">
+            <!-- Subscription Status -->
+            <div class="subscription-status trial" id="subscriptionStatus">
+                <div class="status-icon">⏱️</div>
+                <div class="status-title">Free Trial Active</div>
+                <div class="days-left" id="daysLeft">7 days remaining</div>
+                <div class="status-message">Subscribe now to continue after trial ends</div>
+            </div>
+            
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+            
+            <!-- Pricing Section -->
+            <div class="pricing-section">
+                <h2>Subscription Plan</h2>
+                <div class="price-box">
+                    <div class="price">$9.99<span class="price-period">/month</span></div>
+                </div>
+                <ul class="features-list">
+                    <li>Unlimited access to all percussion loops</li>
+                    <li>Sync multiple instruments simultaneously</li>
+                    <li>Adjustable BPM for each track</li>
+                    <li>Dark & Light theme options</li>
+                    <li>New instruments added monthly</li>
+                    <li>No ads, no interruptions</li>
+                </ul>
+            </div>
+            
+            <!-- Subscription Form -->
+            <form id="subscriptionForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="your.email@example.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number (Optional)</label>
+                    <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <!-- Zelle Payment Instructions -->
+                <div class="payment-section">
+                    <h3>💳 Payment via Zelle</h3>
+                    <div class="zelle-info">
+                        <p><strong>Send payment to:</strong></p>
+                        <div class="zelle-number" id="zelleNumber">
+                            (555) 123-4567
+                            <button type="button" class="copy-btn" onclick="copyZelleNumber()">Copy</button>
+                        </div>
+                        <p style="text-align: center; color: #999; font-size: 0.9em;">
+                            Amount: <strong style="color: #667eea;">$9.99</strong>
+                        </p>
+                    </div>
+                    
+                    <div class="payment-steps">
+                        <strong>How to subscribe:</strong>
+                        <ol>
+                            <li>Open your Zelle app or banking app</li>
+                            <li>Send $9.99 to the number above</li>
+                            <li>Enter your email below and submit</li>
+                            <li>Your subscription will be activated within 24 hours</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="zelleConfirmation">Zelle Transaction ID (Optional)</label>
+                    <input type="text" id="zelleConfirmation" placeholder="Enter transaction ID for faster processing">
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Subscribe Now</button>
+                    <button type="button" class="btn btn-secondary" onclick="continueWithTrial()">Continue Trial</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="footer-links">
+            <a href="mobile-frontend.html">← Back to App</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+        </div>
+    </div>
+    
+    <script>
+        // Calculate trial days remaining
+        function calculateTrialDays() {
+            const trialStart = localStorage.getItem('trialStartDate');
+            if (!trialStart) {
+                // Set trial start date if not exists
+                localStorage.setItem('trialStartDate', new Date().toISOString());
+                return 7;
+            }
+            
+            const startDate = new Date(trialStart);
+            const currentDate = new Date();
+            const daysPassed = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+            const daysRemaining = Math.max(0, 7 - daysPassed);
+            
+            return daysRemaining;
+        }
+        
+        // Update subscription status
+        function updateSubscriptionStatus() {
+            const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+            const daysRemaining = calculateTrialDays();
+            const statusDiv = document.getElementById('subscriptionStatus');
+            const daysLeftDiv = document.getElementById('daysLeft');
+            
+            if (isSubscribed) {
+                statusDiv.className = 'subscription-status active';
+                statusDiv.innerHTML = `
+                    <div class="status-icon">✅</div>
+                    <div class="status-title">Active Subscription</div>
+                    <div class="status-message">Thank you for being a premium member!</div>
+                `;
+            } else if (daysRemaining > 0) {
+                statusDiv.className = 'subscription-status trial';
+                daysLeftDiv.textContent = `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`;
+            } else {
+                statusDiv.className = 'subscription-status expired';
+                statusDiv.innerHTML = `
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-title">Trial Expired</div>
+                    <div class="status-message">Subscribe now to continue using the app</div>
+                `;
+            }
+        }
+        
+        // Copy Zelle number to clipboard
+        function copyZelleNumber() {
+            const zelleNumber = '(555) 123-4567';
+            navigator.clipboard.writeText(zelleNumber).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#4caf50';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#2196F3';
+                }, 2000);
+            });
+        }
+        
+        // Handle subscription form submission
+        document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const transactionId = document.getElementById('zelleConfirmation').value;
+            
+            // Store subscription details
+            const subscriptionData = {
+                email: email,
+                phone: phone,
+                transactionId: transactionId,
+                submittedAt: new Date().toISOString(),
+                status: 'pending'
+            };
+            
+            localStorage.setItem('subscriptionData', JSON.stringify(subscriptionData));
+            
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = `✅ Subscription request submitted! We'll verify your payment and activate your subscription within 24 hours. A confirmation will be sent to ${email}.`;
+            successMsg.classList.add('show');
+            
+            // Clear form
+            document.getElementById('subscriptionForm').reset();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 5000);
+        });
+        
+        // Continue with trial
+        function continueWithTrial() {
+            const daysRemaining = calculateTrialDays();
+            
+            if (daysRemaining > 0) {
+                window.location.href = 'mobile-frontend.html';
+            } else {
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = '❌ Your trial has expired. Please subscribe to continue using the app.';
+                errorMsg.classList.add('show');
+                
+                setTimeout(() => {
+                    errorMsg.classList.remove('show');
+                }, 3000);
+            }
+        }
+        
+        // Check subscription status on page load
+        updateSubscriptionStatus();
+        
+        // Check if user should be redirected based on trial status
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromApp = urlParams.get('from') === 'app';
+            
+            if (fromApp) {
+                const daysRemaining = calculateTrialDays();
+                const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+                
+                if (daysRemaining === 0 && !isSubscribed) {
+                    const errorMsg = document.getElementById('errorMessage');
+                    errorMsg.textContent = '⚠️ Your free trial has expired. Please subscribe to continue.';
+                    errorMsg.classList.add('show');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
