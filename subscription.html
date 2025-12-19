@@ -493,13 +493,21 @@
                     </div>
                     
                     <div class="payment-steps">
+                        <strong>� Payment Plans:</strong>
+                        <ul style="margin: 10px 0; padding-left: 25px;">
+                            <li><strong>USA:</strong> $4.00/month via Zelle</li>
+                            <li><strong>Ghana:</strong> GH₵ 10/month via MTN Mobile Money</li>
+                        </ul>
+                        
                         <strong>📱 How to subscribe:</strong>
                         <ol>
                             <li>Enter your email and phone number below</li>
                             <li>Choose your payment method (Zelle or MTN)</li>
                             <li>Send payment to the number above</li>
-                            <li>You will receive a 4-digit activation code via SMS</li>
-                            <li>Enter the code and click "Activate Subscription"</li>
+                            <li>You will receive a <strong>Transaction ID receipt</strong> via SMS</li>
+                            <li>Enter the Transaction ID in the form below</li>
+                            <li>A <strong>4-digit activation code</strong> will be sent to you via SMS</li>
+                            <li>Enter the 4-digit code and click "Activate Subscription"</li>
                             <li>Your app will be activated instantly!</li>
                         </ol>
                     </div>
@@ -508,7 +516,7 @@
                 <!-- Activation Code Section -->
                 <div class="activation-section">
                     <h3>🔐 Activation Code</h3>
-                    <p style="text-align: center; margin-bottom: 15px;">After sending payment, you will receive a 4-digit activation code via SMS to your phone number.</p>
+                    <p style="text-align: center; margin-bottom: 15px;">After entering your Transaction ID, you will receive a 4-digit activation code via SMS to your phone number.</p>
                     
                     <div style="margin-top: 20px;">
                         <label style="display: block; text-align: center; margin-bottom: 10px; font-weight: 600;">Enter 4-Digit Code from SMS:</label>
@@ -522,9 +530,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="transactionId">Transaction ID <span style="color: red;">*</span></label>
-                    <input type="text" id="transactionId" placeholder="Enter transaction ID from payment confirmation" required>
-                    <small style="color: #666; display: block; margin-top: 5px;">This ID will be sent to your phone via SMS for verification</small>
+                    <label for="transactionId">Transaction ID (Receipt) <span style="color: red;">*</span></label>
+                    <input type="text" id="transactionId" placeholder="Enter transaction ID from your payment receipt SMS" required>
+                    <small style="color: #666; display: block; margin-top: 5px;">After payment, you'll receive a Transaction ID via SMS. Enter it here to receive your 4-digit activation code.</small>
                 </div>
                 
                 <div class="button-group">
