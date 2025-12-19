@@ -256,7 +256,6 @@
 
         /* Beat Grid */
         .beat-grid-container {
-            overflow-x: auto;
             background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 10px;
@@ -264,19 +263,49 @@
 
         .beat-grid {
             display: grid;
-            grid-template-columns: 100px repeat(64, 30px); /* 16 bars × 4 beats */
+            grid-template-columns: repeat(64, 30px); /* 16 bars × 4 beats */
             gap: 2px;
             min-width: max-content;
         }
 
-        .track-label {
+        .sequencer-piano-key {
+            width: 80px;
+            height: 40px;
+            background: linear-gradient(to right, #fff 0%, #f0f0f0 100%);
+            border: 1px solid #000;
+            border-radius: 5px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            font-size: 14px;
+            justify-content: center;
+            font-size: 12px;
             font-weight: bold;
+            color: #333;
+            transition: all 0.1s;
+        }
+
+        .sequencer-piano-key:hover {
+            background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 100%);
+        }
+
+        .sequencer-piano-key:active,
+        .sequencer-piano-key.playing {
+            background: linear-gradient(to right, #00d9ff 0%, #00b8d4 100%);
+            color: #fff;
+        }
+
+        .sequencer-piano-key.black {
+            background: linear-gradient(to right, #333 0%, #000 100%);
+            color: #fff;
+        }
+
+        .sequencer-piano-key.black:hover {
+            background: linear-gradient(to right, #444 0%, #111 100%);
+        }
+
+        .sequencer-piano-key.black:active,
+        .sequencer-piano-key.black.playing {
+            background: linear-gradient(to right, #00ff88 0%, #00d970 100%);
         }
 
         .beat-cell {
@@ -485,6 +514,11 @@
             min-width: 80px;
         }
 
+        .active-bar {
+            background: rgba(0, 217, 255, 0.4) !important;
+            border-color: rgba(0, 217, 255, 0.7) !important;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header h1 {
@@ -530,34 +564,15 @@
 
         <!-- Instrument Selector -->
         <div class="instrument-section">
-            <h3>🎸 Select Instrument</h3>
+            <h3>🎸 Upload Custom Sample</h3>
             <div class="instrument-selector">
-                <select class="instrument-dropdown" id="instrumentSelector">
-                    <option value="">Choose an instrument...</option>
-                    <option value="808-kick">808 Kick</option>
-                    <option value="808-snare">808 Snare</option>
-                    <option value="808-hihat">808 Hi-Hat</option>
-                    <option value="808-clap">808 Clap</option>
-                    <option value="piano">Piano</option>
-                    <option value="guitar">Guitar</option>
-                    <option value="bass">Bass</option>
-                    <option value="synth">Synth</option>
-                    <option value="strings">Strings</option>
-                    <option value="brass">Brass</option>
-                    <option value="drums">Drums</option>
-                    <option value="percussion">Percussion</option>
-                </select>
-                <button class="upload-btn" onclick="uploadCustomSample()">
-                    📁 Upload Custom Sample
+                <button class="upload-btn" onclick="uploadCustomSample()" style="flex: 1;">
+                    📁 Upload Audio Sample
                 </button>
+                <div id="sampleInfo" style="flex: 2; padding: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; color: #00ff88; font-size: 14px; display: none;">
+                    <span id="sampleName">No sample loaded</span>
+                </div>
             </div>
-        </div>
-
-        <!-- BPM Control -->
-        <div class="bpm-control">
-            <label>🎵 BPM:</label>
-            <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="200" value="120">
-            <span class="bpm-value" id="bpmValue">120</span>
         </div>
 
         <!-- Piano Section -->
@@ -573,7 +588,7 @@
         <!-- Sequencer Section -->
         <div class="sequencer-section">
             <div class="sequencer-header">
-                <h3>🎚️ 16-Bar Beat Sequencer</h3>
+                <h3>🎚️ Beat Sequencer</h3>
                 <div class="sequencer-controls">
                     <button class="control-btn play" onclick="playSequence()">▶️ Play</button>
                     <button class="control-btn stop" onclick="stopSequence()">⏹️ Stop</button>
@@ -581,9 +596,38 @@
                 </div>
             </div>
 
+            <!-- BPM and Bar Controls -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="bpm-control" style="flex: 2; margin: 0;">
+                    <label>🎵 BPM:</label>
+                    <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="200" value="120">
+                    <span class="bpm-value" id="bpmValue">120</span>
+                </div>
+                <div style="flex: 1; display: flex; gap: 8px; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                    <label style="font-weight: bold; color: #00d9ff; white-space: nowrap;">Bars:</label>
+                    <button class="control-btn" onclick="setBarCount(4)" data-bars="4" style="padding: 8px 12px;">4</button>
+                    <button class="control-btn" onclick="setBarCount(8)" data-bars="8" style="padding: 8px 12px;">8</button>
+                    <button class="control-btn" onclick="setBarCount(12)" data-bars="12" style="padding: 8px 12px;">12</button>
+                    <button class="control-btn" onclick="setBarCount(16)" data-bars="16" style="padding: 8px 12px;" class="active-bar">16</button>
+                </div>
+            </div>
+
             <div class="beat-grid-container">
-                <div class="beat-grid" id="beatGrid">
-                    <!-- Beat grid will be generated by JavaScript -->
+                <div style="display: flex; gap: 20px;">
+                    <!-- Piano Keys (Left Side) -->
+                    <div style="flex-shrink: 0;">
+                        <div style="height: 40px; margin-bottom: 2px;"></div> <!-- Spacer for alignment -->
+                        <div id="sequencerPiano" style="display: flex; flex-direction: column; gap: 2px;">
+                            <!-- Piano keys will be generated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Beat Grid (Right Side) -->
+                    <div style="flex: 1; overflow-x: auto;">
+                        <div id="beatGrid" class="beat-grid">
+                            <!-- Beat grid will be generated by JavaScript -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -610,6 +654,9 @@
         let currentBeat = 0;
         let sequenceInterval;
         let bpm = 120;
+        let currentBars = 16;
+        let customSampleBuffer = null;
+        let customSampleName = null;
 
         // Initialize Audio Context
         function initAudio() {
@@ -692,20 +739,44 @@
             }
         }
 
-        // Generate Beat Grid (8 tracks × 16 bars × 4 beats = 512 cells)
+        // Piano notes for sequencer
+        const sequencerNotes = [
+            { note: 'C5', freq: 523.25, isBlack: false },
+            { note: 'B4', freq: 493.88, isBlack: false },
+            { note: 'A#4', freq: 466.16, isBlack: true },
+            { note: 'A4', freq: 440.00, isBlack: false },
+            { note: 'G#4', freq: 415.30, isBlack: true },
+            { note: 'G4', freq: 392.00, isBlack: false },
+            { note: 'F#4', freq: 369.99, isBlack: true },
+            { note: 'F4', freq: 349.23, isBlack: false },
+            { note: 'E4', freq: 329.63, isBlack: false },
+            { note: 'D#4', freq: 311.13, isBlack: true },
+            { note: 'D4', freq: 293.66, isBlack: false },
+            { note: 'C#4', freq: 277.18, isBlack: true },
+            { note: 'C4', freq: 261.63, isBlack: false },
+        ];
+
+        // Generate Beat Grid with piano notes
         function generateBeatGrid() {
             const beatGrid = document.getElementById('beatGrid');
-            const tracks = ['Kick', 'Snare', 'Hi-Hat', 'Clap', 'Tom', 'Crash', 'Ride', 'Perc'];
+            const sequencerPiano = document.getElementById('sequencerPiano');
             const beatsPerBar = 4;
-            const totalBars = 16;
-            const totalBeats = beatsPerBar * totalBars; // 64 beats
+            const totalBeats = beatsPerBar * currentBars;
 
-            tracks.forEach((track, trackIndex) => {
-                // Track label
-                const label = document.createElement('div');
-                label.className = 'track-label';
-                label.textContent = track;
-                beatGrid.appendChild(label);
+            beatGrid.innerHTML = '';
+            sequencerPiano.innerHTML = '';
+
+            // Update grid columns
+            beatGrid.style.gridTemplateColumns = `repeat(${totalBeats}, 30px)`;
+
+            sequencerNotes.forEach((noteData, trackIndex) => {
+                // Piano key on left
+                const pianoKey = document.createElement('div');
+                pianoKey.className = 'sequencer-piano-key' + (noteData.isBlack ? ' black' : '');
+                pianoKey.textContent = noteData.note;
+                pianoKey.dataset.note = noteData.note;
+                pianoKey.addEventListener('click', () => playSequencerNote(noteData));
+                sequencerPiano.appendChild(pianoKey);
 
                 // Beat cells
                 for (let beat = 0; beat < totalBeats; beat++) {
@@ -713,6 +784,7 @@
                     cell.className = 'beat-cell';
                     cell.dataset.track = trackIndex;
                     cell.dataset.beat = beat;
+                    cell.dataset.note = noteData.note;
                     cell.addEventListener('click', () => toggleBeat(cell));
                     beatGrid.appendChild(cell);
                 }
@@ -733,35 +805,105 @@
             currentBeat = 0;
 
             const beatDuration = (60 / bpm) * 250; // Quarter note in ms
+            const totalBeats = currentBars * 4;
 
             sequenceInterval = setInterval(() => {
                 playCurrentBeat();
-                currentBeat = (currentBeat + 1) % 64;
+                currentBeat = (currentBeat + 1) % totalBeats;
             }, beatDuration);
+        }
+
+        // Set Bar Count
+        function setBarCount(bars) {
+            currentBars = bars;
+            stopSequence();
+            generateBeatGrid();
+            
+            // Update active button
+            document.querySelectorAll('[data-bars]').forEach(btn => {
+                btn.classList.remove('active-bar');
+            });
+            document.querySelector(`[data-bars="${bars}"]`).classList.add('active-bar');
+        }
+
+        // Play Sequencer Note (for piano keys on left)
+        function playSequencerNote(noteData) {
+            const pianoKey = document.querySelector(`.sequencer-piano-key[data-note="${noteData.note}"]`);
+            if (pianoKey) {
+                pianoKey.classList.add('playing');
+                setTimeout(() => pianoKey.classList.remove('playing'), 200);
+            }
+
+            if (customSampleBuffer) {
+                playCustomSample(noteData.freq);
+            } else {
+                playNote(noteData.note, {classList: {add: () => {}, remove: () => {}}});
+            }
         }
 
         // Play Current Beat
         function playCurrentBeat() {
             const ctx = initAudio();
-            const tracks = document.querySelectorAll('.beat-cell');
+            const totalBeats = currentBars * 4;
+            const cells = document.querySelectorAll('.beat-cell');
             
             // Remove previous playing state
-            tracks.forEach(cell => cell.classList.remove('playing'));
+            cells.forEach(cell => cell.classList.remove('playing'));
+            document.querySelectorAll('.sequencer-piano-key').forEach(key => key.classList.remove('playing'));
 
             // Play active beats at current position
-            tracks.forEach(cell => {
+            cells.forEach(cell => {
                 if (parseInt(cell.dataset.beat) === currentBeat) {
                     cell.classList.add('playing');
                     
                     if (cell.classList.contains('active')) {
-                        playDrumSound(cell.dataset.track);
+                        const trackIndex = parseInt(cell.dataset.track);
+                        const noteData = sequencerNotes[trackIndex];
+                        
+                        // Highlight piano key
+                        const pianoKey = document.querySelector(`.sequencer-piano-key[data-note="${noteData.note}"]`);
+                        if (pianoKey) {
+                            pianoKey.classList.add('playing');
+                            setTimeout(() => pianoKey.classList.remove('playing'), 100);
+                        }
+                        
+                        // Play sound
+                        if (customSampleBuffer) {
+                            playCustomSample(noteData.freq);
+                        } else {
+                            playDefaultNote(noteData.freq);
+                        }
                     }
                 }
             });
         }
 
-        // Play Drum Sound
-        function playDrumSound(trackIndex) {
+        // Play Custom Sample at different pitch
+        function playCustomSample(frequency) {
+            if (!customSampleBuffer) return;
+            
+            const ctx = initAudio();
+            const source = ctx.createBufferSource();
+            const gainNode = ctx.createGain();
+            
+            source.buffer = customSampleBuffer;
+            
+            // Adjust playback rate based on frequency (middle C4 = 261.63 Hz as reference)
+            const playbackRate = frequency / 261.63;
+            source.playbackRate.value = playbackRate;
+            
+            source.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            
+            source.start(ctx.currentTime);
+            source.stop(ctx.currentTime + 0.5);
+        }
+
+        // Play Default Note (fallback)
+        function playDefaultNote(frequency) {
             const ctx = initAudio();
             const oscillator = ctx.createOscillator();
             const gainNode = ctx.createGain();
@@ -769,16 +911,14 @@
             oscillator.connect(gainNode);
             gainNode.connect(ctx.destination);
 
-            // Different frequencies for different tracks
-            const frequencies = [60, 200, 400, 300, 150, 500, 350, 250];
-            oscillator.frequency.value = frequencies[trackIndex];
-            oscillator.type = trackIndex < 2 ? 'sine' : 'square';
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
 
             gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
 
             oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + 0.1);
+            oscillator.stop(ctx.currentTime + 0.3);
         }
 
         // Stop Sequence
@@ -938,10 +1078,23 @@
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'audio/*';
-            input.onchange = (e) => {
+            input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    alert(`Sample "${file.name}" uploaded! (Feature coming soon)`);
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const ctx = initAudio();
+                        customSampleBuffer = await ctx.decodeAudioData(arrayBuffer);
+                        customSampleName = file.name;
+                        
+                        // Update UI
+                        document.getElementById('sampleInfo').style.display = 'block';
+                        document.getElementById('sampleName').textContent = `✓ ${file.name}`;
+                        
+                        alert(`Sample "${file.name}" loaded successfully!`);
+                    } catch (error) {
+                        alert('Error loading audio file: ' + error.message);
+                    }
                 }
             };
             input.click();
