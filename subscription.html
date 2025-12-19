@@ -487,7 +487,7 @@
                                 <button type="button" class="copy-btn" onclick="copyNumber('mtn')">Copy</button>
                             </div>
                             <p style="text-align: center; color: #999; font-size: 0.9em;">
-                                Monthly: <strong style="color: #667eea;">GH₵ 65</strong>
+                                Monthly: <strong style="color: #667eea;">GH₵ 10</strong>
                             </p>
                         </div>
                     </div>
@@ -495,10 +495,11 @@
                     <div class="payment-steps">
                         <strong>📱 How to subscribe:</strong>
                         <ol>
+                            <li>Enter your email and phone number below</li>
                             <li>Choose your payment method (Zelle or MTN)</li>
                             <li>Send payment to the number above</li>
-                            <li>Click "Generate Activation Code" button below</li>
-                            <li>Enter the 4-digit code and click "Activate Subscription"</li>
+                            <li>You will receive a 4-digit activation code via SMS</li>
+                            <li>Enter the code and click "Activate Subscription"</li>
                             <li>Your app will be activated instantly!</li>
                         </ol>
                     </div>
@@ -507,22 +508,10 @@
                 <!-- Activation Code Section -->
                 <div class="activation-section">
                     <h3>🔐 Activation Code</h3>
-                    <p style="text-align: center; margin-bottom: 15px;">After sending payment, generate your activation code:</p>
-                    
-                    <button type="button" class="btn btn-primary" onclick="generateActivationCode()" style="width: 100%; margin-bottom: 15px;">
-                        🎲 Generate Activation Code
-                    </button>
-                    
-                    <div id="codeDisplay" style="display: none;">
-                        <div class="generated-code">
-                            <p style="margin-bottom: 10px;">Your Activation Code:</p>
-                            <strong id="activationCodeText"></strong>
-                            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Enter this code below to activate</p>
-                        </div>
-                    </div>
+                    <p style="text-align: center; margin-bottom: 15px;">After sending payment, you will receive a 4-digit activation code via SMS to your phone number.</p>
                     
                     <div style="margin-top: 20px;">
-                        <label style="display: block; text-align: center; margin-bottom: 10px; font-weight: 600;">Enter 4-Digit Code:</label>
+                        <label style="display: block; text-align: center; margin-bottom: 10px; font-weight: 600;">Enter 4-Digit Code from SMS:</label>
                         <div class="code-input">
                             <input type="text" maxlength="1" class="code-digit" id="digit1" oninput="moveToNext(this, 'digit2')">
                             <input type="text" maxlength="1" class="code-digit" id="digit2" oninput="moveToNext(this, 'digit3')">
@@ -533,8 +522,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="transactionId">Transaction ID (Optional)</label>
-                    <input type="text" id="transactionId" placeholder="Enter transaction ID for reference">
+                    <label for="transactionId">Transaction ID <span style="color: red;">*</span></label>
+                    <input type="text" id="transactionId" placeholder="Enter transaction ID from payment confirmation" required>
+                    <small style="color: #666; display: block; margin-top: 5px;">This ID will be sent to your phone via SMS for verification</small>
                 </div>
                 
                 <div class="button-group">
@@ -614,19 +604,8 @@
             });
         }
         
-        // Generate random 4-digit activation code
-        async function generateActivationCode() {
-            const phone = document.getElementById('phone').value;
-            
-            // Validate phone number
-            if (!phone) {
-                const errorMsg = document.getElementById('errorMessage');
-                errorMsg.textContent = '❌ Please enter your phone number first.';
-                errorMsg.classList.add('show');
-                setTimeout(() => errorMsg.classList.remove('show'), 3000);
-                return;
-            }
-            
+        // Send activation code automatically when phone is entered
+        async function sendActivationCodeAuto(phone, transactionId) {
             // Generate random 4-digit code
             generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
             
@@ -635,16 +614,16 @@
             localStorage.setItem('codeGeneratedAt', new Date().toISOString());
             localStorage.setItem('codePhone', phone);
             
-            // Display the code
-            document.getElementById('activationCodeText').textContent = generatedCode;
-            document.getElementById('codeDisplay').style.display = 'block';
-            
             // Try to send SMS (requires backend)
             try {
                 const response = await fetch('/api/send-activation-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone, code: generatedCode })
+                    body: JSON.stringify({ 
+                        phone: phone, 
+                        code: generatedCode,
+                        transactionId: transactionId
+                    })
                 });
                 
                 if (response.ok) {
@@ -652,16 +631,18 @@
                     successMsg.textContent = `✅ Activation code sent to ${phone}! Check your SMS and enter it below.`;
                     successMsg.classList.add('show');
                     setTimeout(() => successMsg.classList.remove('show'), 5000);
+                    return true;
                 } else {
                     throw new Error('SMS service unavailable');
                 }
             } catch (error) {
-                // Fallback: Show code on screen if SMS fails
-                console.log('SMS sending not available, showing code on screen');
+                // Fallback: Generate code and show message
+                console.log('SMS sending not available, code stored locally');
                 const successMsg = document.getElementById('successMessage');
-                successMsg.textContent = '⚠️ SMS service unavailable. Your code is displayed above - enter it below.';
+                successMsg.textContent = `ℹ️ Code generated. Transaction ID will be sent via SMS to ${phone}.`;
                 successMsg.classList.add('show');
                 setTimeout(() => successMsg.classList.remove('show'), 5000);
+                return false;
             }
         }
         
@@ -701,7 +682,7 @@
         }
         
         // Activate subscription with code verification
-        function activateSubscription() {
+        async function activateSubscription() {
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
             const transactionId = document.getElementById('transactionId').value;
@@ -715,6 +696,15 @@
                 return;
             }
             
+            // Validate transaction ID
+            if (!transactionId) {
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = '❌ Please enter your transaction ID.';
+                errorMsg.classList.add('show');
+                setTimeout(() => errorMsg.classList.remove('show'), 3000);
+                return;
+            }
+            
             // Get entered code
             const digit1 = document.getElementById('digit1').value;
             const digit2 = document.getElementById('digit2').value;
@@ -722,20 +712,27 @@
             const digit4 = document.getElementById('digit4').value;
             const enteredCode = digit1 + digit2 + digit3 + digit4;
             
-            // Verify code
-            const storedCode = localStorage.getItem('activationCode');
-            
-            if (!storedCode) {
+            // Check if code is complete
+            if (enteredCode.length !== 4) {
                 const errorMsg = document.getElementById('errorMessage');
-                errorMsg.textContent = '❌ Please generate an activation code first.';
+                errorMsg.textContent = '❌ Please enter the complete 4-digit code.';
                 errorMsg.classList.add('show');
                 setTimeout(() => errorMsg.classList.remove('show'), 3000);
                 return;
             }
             
+            // If no stored code, send it now with transaction ID
+            let storedCode = localStorage.getItem('activationCode');
+            if (!storedCode) {
+                // Send activation code with transaction ID
+                await sendActivationCodeAuto(phone, transactionId);
+                storedCode = localStorage.getItem('activationCode');
+            }
+            
+            // Verify code
             if (enteredCode !== storedCode) {
                 const errorMsg = document.getElementById('errorMessage');
-                errorMsg.textContent = '❌ Invalid activation code. Please check and try again.';
+                errorMsg.textContent = '❌ Invalid activation code. Please check your SMS and try again.';
                 errorMsg.classList.add('show');
                 setTimeout(() => errorMsg.classList.remove('show'), 3000);
                 return;
