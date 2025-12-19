@@ -643,6 +643,11 @@
                 </a>
             </div>
             
+            <!-- Online/Offline Status -->
+            <div id="onlineStatus" style="padding: 10px 20px; margin: 0 20px 15px 20px; background: rgba(0, 255, 136, 0.2); border-left: 4px solid #00ff88; border-radius: 8px; display: none;">
+                <span id="statusText">🌐 Online - All features available</span>
+            </div>
+            
             <!-- Search and Filter Section -->
             <div class="search-section">
                 <input type="text" class="search-bar" id="searchBar" placeholder="🔍 Search instruments..." onkeyup="filterInstruments()">
@@ -1311,14 +1316,96 @@
             console.log('🔔 Click at ' + (volume * 100).toFixed(0) + '% volume');
         }
         
-        // Register service worker for PWA
+        // Register service worker for PWA with subscription check
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => console.log('✅ Service Worker registered'))
+                    .then(registration => {
+                        console.log('✅ Service Worker registered');
+                        
+                        // Check subscription status and notify service worker
+                        checkAndUpdateOfflineAccess();
+                    })
                     .catch(err => console.log('❌ Service Worker registration failed:', err));
             });
         }
+        
+        // Check subscription and enable/disable offline access
+        function checkAndUpdateOfflineAccess() {
+            const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+            const trialStart = localStorage.getItem('trialStart');
+            const now = new Date().getTime();
+            const daysRemaining = trialStart ? 7 - Math.floor((now - parseInt(trialStart)) / (1000 * 60 * 60 * 24)) : 7;
+            
+            // Consider user as having access if subscribed or still in trial
+            const hasAccess = isSubscribed || daysRemaining > 0;
+            
+            // Notify service worker about subscription status
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'CHECK_SUBSCRIPTION',
+                    isSubscribed: hasAccess
+                });
+                
+                if (hasAccess) {
+                    console.log('🔓 Offline access enabled - Content will be cached');
+                } else {
+                    console.log('🔒 Offline access disabled - Subscription required');
+                }
+            }
+            
+            // Show warning if trial expired and not subscribed
+            if (!hasAccess) {
+                setTimeout(() => {
+                    if (confirm('⚠️ Your trial has expired. Subscribe now to enable offline access and continue using all features.')) {
+                        window.location.href = '/subscription.html';
+                    }
+                }, 2000);
+            }
+        }
+        
+        // Re-check subscription status periodically
+        setInterval(checkAndUpdateOfflineAccess, 60000); // Check every minute
+        
+        // Online/Offline status indicator
+        function updateOnlineStatus() {
+            const statusDiv = document.getElementById('onlineStatus');
+            const statusText = document.getElementById('statusText');
+            const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+            const trialStart = localStorage.getItem('trialStart');
+            const now = new Date().getTime();
+            const daysRemaining = trialStart ? 7 - Math.floor((now - parseInt(trialStart)) / (1000 * 60 * 60 * 24)) : 7;
+            const hasAccess = isSubscribed || daysRemaining > 0;
+            
+            if (navigator.onLine) {
+                statusDiv.style.background = 'rgba(0, 255, 136, 0.2)';
+                statusDiv.style.borderColor = '#00ff88';
+                statusText.textContent = '🌐 Online - All features available';
+                statusDiv.style.display = 'block';
+            } else {
+                if (hasAccess) {
+                    statusDiv.style.background = 'rgba(255, 193, 7, 0.2)';
+                    statusDiv.style.borderColor = '#ffc107';
+                    statusText.textContent = '📱 Offline - Premium features cached';
+                    statusDiv.style.display = 'block';
+                } else {
+                    statusDiv.style.background = 'rgba(255, 68, 68, 0.2)';
+                    statusDiv.style.borderColor = '#ff4444';
+                    statusText.textContent = '🔒 Offline - Subscribe for offline access';
+                    statusDiv.style.display = 'block';
+                }
+            }
+        }
+        
+        // Listen for online/offline events
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        window.addEventListener('load', () => {
+            setTimeout(updateOnlineStatus, 1000);
+            setTimeout(() => {
+                document.getElementById('onlineStatus').style.display = 'none';
+            }, 5000); // Hide after 5 seconds
+        });
         
         // Prompt to install PWA
         let deferredPrompt;

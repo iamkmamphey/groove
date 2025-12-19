@@ -1129,10 +1129,36 @@
             console.log('🎹 Sample Editor Ready!');
         });
 
-        // Service Worker Registration
+        // Service Worker Registration with subscription check
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('Service Worker registered'))
+                .then(reg => {
+                    console.log('Service Worker registered');
+                    
+                    // Check subscription status
+                    const isSubscribed = localStorage.getItem('isSubscribed') === 'true';
+                    const trialStart = localStorage.getItem('trialStart');
+                    const now = new Date().getTime();
+                    const daysRemaining = trialStart ? 7 - Math.floor((now - parseInt(trialStart)) / (1000 * 60 * 60 * 24)) : 7;
+                    const hasAccess = isSubscribed || daysRemaining > 0;
+                    
+                    // Notify service worker
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'CHECK_SUBSCRIPTION',
+                            isSubscribed: hasAccess
+                        });
+                    }
+                    
+                    // Warn if no access
+                    if (!hasAccess) {
+                        setTimeout(() => {
+                            if (confirm('⚠️ Your trial has expired. Subscribe now to enable offline access.')) {
+                                window.location.href = 'subscription.html';
+                            }
+                        }, 2000);
+                    }
+                })
                 .catch(err => console.error('Service Worker registration failed:', err));
         }
     </script>
