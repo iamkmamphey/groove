@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample - Beat & Piano Editor | Groove</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(0, 217, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Instrument Selector */
+        .instrument-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .instrument-section h3 {
+            margin-bottom: 15px;
+            color: #00d9ff;
+        }
+
+        .instrument-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .instrument-dropdown {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .instrument-dropdown option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .upload-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Piano Section */
+        .piano-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .piano-section h3 {
+            margin-bottom: 20px;
+            color: #00d9ff;
+        }
+
+        .piano {
+            display: flex;
+            justify-content: center;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .piano-keys {
+            display: flex;
+            position: relative;
+        }
+
+        .white-key {
+            width: 50px;
+            height: 200px;
+            background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+            border: 2px solid #000;
+            border-radius: 0 0 5px 5px;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .white-key:hover {
+            background: linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%);
+        }
+
+        .white-key:active,
+        .white-key.active {
+            background: linear-gradient(to bottom, #00d9ff 0%, #00b8d4 100%);
+            transform: translateY(2px);
+            color: #fff;
+        }
+
+        .black-key {
+            width: 30px;
+            height: 120px;
+            background: linear-gradient(to bottom, #333 0%, #000 100%);
+            border: 2px solid #000;
+            border-radius: 0 0 3px 3px;
+            position: absolute;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.1s;
+        }
+
+        .black-key:hover {
+            background: linear-gradient(to bottom, #444 0%, #111 100%);
+        }
+
+        .black-key:active,
+        .black-key.active {
+            background: linear-gradient(to bottom, #00ff88 0%, #00d970 100%);
+            transform: translateY(2px);
+        }
+
+        /* Sequencer Section */
+        .sequencer-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .sequencer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sequencer-header h3 {
+            color: #00d9ff;
+        }
+
+        .sequencer-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 217, 255, 0.2);
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+
+        .control-btn.play {
+            background: linear-gradient(45deg, #00ff88, #00d970);
+            border-color: #00ff88;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .control-btn.stop {
+            background: linear-gradient(45deg, #ff4444, #cc0000);
+            border-color: #ff4444;
+            color: #fff;
+        }
+
+        /* Beat Grid */
+        .beat-grid-container {
+            overflow-x: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .beat-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(64, 30px); /* 16 bars × 4 beats */
+            gap: 2px;
+            min-width: max-content;
+        }
+
+        .track-label {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .beat-cell {
+            width: 30px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .beat-cell:hover {
+            background: rgba(0, 217, 255, 0.2);
+        }
+
+        .beat-cell.active {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-color: #00d9ff;
+        }
+
+        .beat-cell.playing {
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.8);
+            animation: pulse 0.3s ease;
+        }
+
+        /* Bar markers */
+        .beat-cell:nth-child(4n + 2) {
+            border-right: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Pattern Library */
+        .pattern-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pattern-section h3 {
+            margin-bottom: 20px;
+            color: #00d9ff;
+        }
+
+        .pattern-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .pattern-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .save-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #00ff88, #00d970);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .save-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .export-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .export-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Saved Patterns */
+        .saved-patterns {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .pattern-card {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 2px solid rgba(0, 217, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .pattern-card:hover {
+            border-color: rgba(0, 217, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .pattern-card h4 {
+            margin-bottom: 10px;
+            color: #00d9ff;
+        }
+
+        .pattern-card-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .pattern-card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pattern-card-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .load-pattern-btn {
+            background: rgba(0, 217, 255, 0.3);
+            color: #fff;
+        }
+
+        .load-pattern-btn:hover {
+            background: rgba(0, 217, 255, 0.5);
+        }
+
+        .delete-pattern-btn {
+            background: rgba(255, 68, 68, 0.3);
+            color: #fff;
+        }
+
+        .delete-pattern-btn:hover {
+            background: rgba(255, 68, 68, 0.5);
+        }
+
+        /* BPM Control */
+        .bpm-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bpm-control label {
+            font-weight: bold;
+            color: #00d9ff;
+        }
+
+        .bpm-slider {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .bpm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .bpm-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+            min-width: 80px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .white-key {
+                width: 40px;
+                height: 150px;
+            }
+
+            .black-key {
+                width: 24px;
+                height: 90px;
+            }
+
+            .beat-cell {
+                width: 25px;
+                height: 35px;
+            }
+
+            .beat-grid {
+                grid-template-columns: 80px repeat(64, 25px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎹 Sample - Beat & Piano Editor</h1>
+            <div class="nav-links">
+                <a href="mobile-frontend.html">🏠 Home</a>
+                <a href="subscription.html">💎 Subscribe</a>
+            </div>
+        </div>
+
+        <!-- Instrument Selector -->
+        <div class="instrument-section">
+            <h3>🎸 Select Instrument</h3>
+            <div class="instrument-selector">
+                <select class="instrument-dropdown" id="instrumentSelector">
+                    <option value="">Choose an instrument...</option>
+                    <option value="808-kick">808 Kick</option>
+                    <option value="808-snare">808 Snare</option>
+                    <option value="808-hihat">808 Hi-Hat</option>
+                    <option value="808-clap">808 Clap</option>
+                    <option value="piano">Piano</option>
+                    <option value="guitar">Guitar</option>
+                    <option value="bass">Bass</option>
+                    <option value="synth">Synth</option>
+                    <option value="strings">Strings</option>
+                    <option value="brass">Brass</option>
+                    <option value="drums">Drums</option>
+                    <option value="percussion">Percussion</option>
+                </select>
+                <button class="upload-btn" onclick="uploadCustomSample()">
+                    📁 Upload Custom Sample
+                </button>
+            </div>
+        </div>
+
+        <!-- BPM Control -->
+        <div class="bpm-control">
+            <label>🎵 BPM:</label>
+            <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="200" value="120">
+            <span class="bpm-value" id="bpmValue">120</span>
+        </div>
+
+        <!-- Piano Section -->
+        <div class="piano-section">
+            <h3>🎹 Virtual Piano</h3>
+            <div class="piano">
+                <div class="piano-keys" id="pianoKeys">
+                    <!-- Piano keys will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Sequencer Section -->
+        <div class="sequencer-section">
+            <div class="sequencer-header">
+                <h3>🎚️ 16-Bar Beat Sequencer</h3>
+                <div class="sequencer-controls">
+                    <button class="control-btn play" onclick="playSequence()">▶️ Play</button>
+                    <button class="control-btn stop" onclick="stopSequence()">⏹️ Stop</button>
+                    <button class="control-btn" onclick="clearGrid()">🗑️ Clear</button>
+                </div>
+            </div>
+
+            <div class="beat-grid-container">
+                <div class="beat-grid" id="beatGrid">
+                    <!-- Beat grid will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pattern Library -->
+        <div class="pattern-section">
+            <h3>💾 Pattern Library</h3>
+            <div class="pattern-controls">
+                <input type="text" class="pattern-input" id="patternName" placeholder="Pattern name...">
+                <button class="save-btn" onclick="savePattern()">💾 Save Pattern</button>
+                <button class="export-btn" onclick="exportPattern()">📥 Export MIDI</button>
+            </div>
+
+            <div class="saved-patterns" id="savedPatterns">
+                <!-- Saved patterns will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context
+        let audioContext;
+        let isPlaying = false;
+        let currentBeat = 0;
+        let sequenceInterval;
+        let bpm = 120;
+
+        // Initialize Audio Context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // Piano Note Frequencies (C3 to C5)
+        const noteFrequencies = {
+            'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61,
+            'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23,
+            'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+            'C5': 523.25
+        };
+
+        // Generate Piano Keys
+        function generatePiano() {
+            const pianoKeys = document.getElementById('pianoKeys');
+            const whiteNotes = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 
+                               'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+            const blackNotes = ['C#3', 'D#3', 'F#3', 'G#3', 'A#3',
+                               'C#4', 'D#4', 'F#4', 'G#4', 'A#4'];
+
+            // Create white keys
+            whiteNotes.forEach((note, index) => {
+                const key = document.createElement('div');
+                key.className = 'white-key';
+                key.dataset.note = note;
+                key.innerHTML = `<span>${note}</span>`;
+                key.addEventListener('mousedown', () => playNote(note, key));
+                key.addEventListener('mouseup', () => stopNote(key));
+                key.addEventListener('mouseleave', () => stopNote(key));
+                pianoKeys.appendChild(key);
+            });
+
+            // Create black keys
+            const blackKeyPositions = [35, 85, 185, 235, 285, 385, 435, 535, 585, 685];
+            blackNotes.forEach((note, index) => {
+                const key = document.createElement('div');
+                key.className = 'black-key';
+                key.dataset.note = note;
+                key.style.left = blackKeyPositions[index] + 'px';
+                key.addEventListener('mousedown', () => playNote(note, key));
+                key.addEventListener('mouseup', () => stopNote(key));
+                key.addEventListener('mouseleave', () => stopNote(key));
+                pianoKeys.appendChild(key);
+            });
+        }
+
+        // Play Piano Note
+        function playNote(note, keyElement) {
+            const ctx = initAudio();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.value = noteFrequencies[note];
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 1);
+
+            keyElement.classList.add('active');
+            keyElement.oscillator = oscillator;
+        }
+
+        // Stop Piano Note
+        function stopNote(keyElement) {
+            keyElement.classList.remove('active');
+            if (keyElement.oscillator) {
+                keyElement.oscillator = null;
+            }
+        }
+
+        // Generate Beat Grid (8 tracks × 16 bars × 4 beats = 512 cells)
+        function generateBeatGrid() {
+            const beatGrid = document.getElementById('beatGrid');
+            const tracks = ['Kick', 'Snare', 'Hi-Hat', 'Clap', 'Tom', 'Crash', 'Ride', 'Perc'];
+            const beatsPerBar = 4;
+            const totalBars = 16;
+            const totalBeats = beatsPerBar * totalBars; // 64 beats
+
+            tracks.forEach((track, trackIndex) => {
+                // Track label
+                const label = document.createElement('div');
+                label.className = 'track-label';
+                label.textContent = track;
+                beatGrid.appendChild(label);
+
+                // Beat cells
+                for (let beat = 0; beat < totalBeats; beat++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'beat-cell';
+                    cell.dataset.track = trackIndex;
+                    cell.dataset.beat = beat;
+                    cell.addEventListener('click', () => toggleBeat(cell));
+                    beatGrid.appendChild(cell);
+                }
+            });
+        }
+
+        // Toggle Beat
+        function toggleBeat(cell) {
+            cell.classList.toggle('active');
+        }
+
+        // Play Sequence
+        function playSequence() {
+            if (isPlaying) return;
+            
+            const ctx = initAudio();
+            isPlaying = true;
+            currentBeat = 0;
+
+            const beatDuration = (60 / bpm) * 250; // Quarter note in ms
+
+            sequenceInterval = setInterval(() => {
+                playCurrentBeat();
+                currentBeat = (currentBeat + 1) % 64;
+            }, beatDuration);
+        }
+
+        // Play Current Beat
+        function playCurrentBeat() {
+            const ctx = initAudio();
+            const tracks = document.querySelectorAll('.beat-cell');
+            
+            // Remove previous playing state
+            tracks.forEach(cell => cell.classList.remove('playing'));
+
+            // Play active beats at current position
+            tracks.forEach(cell => {
+                if (parseInt(cell.dataset.beat) === currentBeat) {
+                    cell.classList.add('playing');
+                    
+                    if (cell.classList.contains('active')) {
+                        playDrumSound(cell.dataset.track);
+                    }
+                }
+            });
+        }
+
+        // Play Drum Sound
+        function playDrumSound(trackIndex) {
+            const ctx = initAudio();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            // Different frequencies for different tracks
+            const frequencies = [60, 200, 400, 300, 150, 500, 350, 250];
+            oscillator.frequency.value = frequencies[trackIndex];
+            oscillator.type = trackIndex < 2 ? 'sine' : 'square';
+
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.1);
+        }
+
+        // Stop Sequence
+        function stopSequence() {
+            isPlaying = false;
+            clearInterval(sequenceInterval);
+            currentBeat = 0;
+            
+            // Remove all playing states
+            document.querySelectorAll('.beat-cell').forEach(cell => {
+                cell.classList.remove('playing');
+            });
+        }
+
+        // Clear Grid
+        function clearGrid() {
+            if (confirm('Clear all beats?')) {
+                document.querySelectorAll('.beat-cell').forEach(cell => {
+                    cell.classList.remove('active');
+                });
+            }
+        }
+
+        // Save Pattern
+        function savePattern() {
+            const name = document.getElementById('patternName').value.trim();
+            if (!name) {
+                alert('Please enter a pattern name');
+                return;
+            }
+
+            const pattern = {
+                name: name,
+                bpm: bpm,
+                beats: [],
+                timestamp: new Date().toISOString()
+            };
+
+            // Save active beats
+            document.querySelectorAll('.beat-cell.active').forEach(cell => {
+                pattern.beats.push({
+                    track: cell.dataset.track,
+                    beat: cell.dataset.beat
+                });
+            });
+
+            // Save to localStorage
+            let patterns = JSON.parse(localStorage.getItem('groovePatterns') || '[]');
+            patterns.push(pattern);
+            localStorage.setItem('groovePatterns', JSON.stringify(patterns));
+
+            document.getElementById('patternName').value = '';
+            loadSavedPatterns();
+            alert('Pattern saved successfully!');
+        }
+
+        // Load Saved Patterns
+        function loadSavedPatterns() {
+            const patterns = JSON.parse(localStorage.getItem('groovePatterns') || '[]');
+            const container = document.getElementById('savedPatterns');
+            container.innerHTML = '';
+
+            if (patterns.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5);">No saved patterns yet</p>';
+                return;
+            }
+
+            patterns.forEach((pattern, index) => {
+                const card = document.createElement('div');
+                card.className = 'pattern-card';
+                card.innerHTML = `
+                    <h4>${pattern.name}</h4>
+                    <div class="pattern-card-info">
+                        🎵 ${pattern.bpm} BPM | 🎯 ${pattern.beats.length} beats<br>
+                        📅 ${new Date(pattern.timestamp).toLocaleDateString()}
+                    </div>
+                    <div class="pattern-card-actions">
+                        <button class="load-pattern-btn" onclick="loadPattern(${index})">Load</button>
+                        <button class="delete-pattern-btn" onclick="deletePattern(${index})">Delete</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Load Pattern
+        function loadPattern(index) {
+            const patterns = JSON.parse(localStorage.getItem('groovePatterns') || '[]');
+            const pattern = patterns[index];
+
+            if (!pattern) return;
+
+            // Clear current grid
+            document.querySelectorAll('.beat-cell').forEach(cell => {
+                cell.classList.remove('active');
+            });
+
+            // Load pattern
+            pattern.beats.forEach(beat => {
+                const cell = document.querySelector(
+                    `.beat-cell[data-track="${beat.track}"][data-beat="${beat.beat}"]`
+                );
+                if (cell) {
+                    cell.classList.add('active');
+                }
+            });
+
+            // Set BPM
+            bpm = pattern.bpm;
+            document.getElementById('bpmSlider').value = bpm;
+            document.getElementById('bpmValue').textContent = bpm;
+
+            alert(`Pattern "${pattern.name}" loaded!`);
+        }
+
+        // Delete Pattern
+        function deletePattern(index) {
+            if (confirm('Delete this pattern?')) {
+                let patterns = JSON.parse(localStorage.getItem('groovePatterns') || '[]');
+                patterns.splice(index, 1);
+                localStorage.setItem('groovePatterns', JSON.stringify(patterns));
+                loadSavedPatterns();
+            }
+        }
+
+        // Export Pattern as MIDI (simplified - creates downloadable data)
+        function exportPattern() {
+            const name = prompt('Export pattern as:') || 'groove-pattern';
+            const pattern = {
+                name: name,
+                bpm: bpm,
+                beats: []
+            };
+
+            document.querySelectorAll('.beat-cell.active').forEach(cell => {
+                pattern.beats.push({
+                    track: cell.dataset.track,
+                    beat: cell.dataset.beat
+                });
+            });
+
+            const dataStr = JSON.stringify(pattern, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${name}.json`;
+            link.click();
+
+            URL.revokeObjectURL(url);
+            alert('Pattern exported successfully!');
+        }
+
+        // Upload Custom Sample
+        function uploadCustomSample() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'audio/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    alert(`Sample "${file.name}" uploaded! (Feature coming soon)`);
+                }
+            };
+            input.click();
+        }
+
+        // BPM Slider
+        document.getElementById('bpmSlider').addEventListener('input', (e) => {
+            bpm = parseInt(e.target.value);
+            document.getElementById('bpmValue').textContent = bpm;
+        });
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isPlaying) {
+                    stopSequence();
+                } else {
+                    playSequence();
+                }
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            generatePiano();
+            generateBeatGrid();
+            loadSavedPatterns();
+            console.log('🎹 Sample Editor Ready!');
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        }
+    </script>
+</body>
+</html>
