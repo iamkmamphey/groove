@@ -204,19 +204,19 @@
             gap: 10px;
         }
         
-        .zelle-info {
+        .payment-info {
             background: white;
             padding: 15px;
             border-radius: 8px;
             margin: 15px 0;
         }
         
-        .zelle-info p {
+        .payment-info p {
             margin: 8px 0;
             color: #333;
         }
         
-        .zelle-number {
+        .payment-number {
             font-size: 1.3em;
             font-weight: bold;
             color: #667eea;
@@ -226,6 +226,73 @@
             text-align: center;
             margin: 10px 0;
             font-family: monospace;
+        }
+        
+        .payment-method {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .payment-method h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .activation-section {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .activation-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+        
+        .code-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .code-digit {
+            width: 50px;
+            height: 60px;
+            font-size: 2em;
+            text-align: center;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .code-digit:focus {
+            outline: none;
+            border-color: #4caf50;
+            background: #f0f8ff;
+        }
+        
+        .generated-code {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #ffc107;
+            text-align: center;
+        }
+        
+        .generated-code strong {
+            font-size: 1.5em;
+            color: #f57c00;
+            font-family: monospace;
+            letter-spacing: 3px;
         }
         
         .copy-btn {
@@ -393,38 +460,85 @@
                     <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
                 </div>
                 
-                <!-- Zelle Payment Instructions -->
+                <!-- Payment Methods -->
                 <div class="payment-section">
-                    <h3>💳 Payment via Zelle</h3>
-                    <div class="zelle-info">
-                        <p><strong>Send payment to:</strong></p>
-                        <div class="zelle-number" id="zelleNumber">
-                            (555) 123-4567
-                            <button type="button" class="copy-btn" onclick="copyZelleNumber()">Copy</button>
+                    <h3 style="margin-bottom: 20px; text-align: center;">💰 Choose Payment Method</h3>
+                    
+                    <div class="payment-method">
+                        <h3>🇺🇸 Zelle (USA)</h3>
+                        <div class="payment-info">
+                            <p><strong>Send payment to:</strong></p>
+                            <div class="payment-number" id="zelleNumber">
+                                +1 (832) 349-2362
+                                <button type="button" class="copy-btn" onclick="copyNumber('zelle')">Copy</button>
+                            </div>
+                            <p style="text-align: center; color: #999; font-size: 0.9em;">
+                                Monthly: <strong style="color: #667eea;">$9.99</strong> | Yearly: <strong style="color: #667eea;">$99.99</strong>
+                            </p>
                         </div>
-                        <p style="text-align: center; color: #999; font-size: 0.9em;">
-                            Amount: <strong style="color: #667eea;">$9.99</strong>
-                        </p>
+                    </div>
+                    
+                    <div class="payment-method">
+                        <h3>🇬🇭 MTN Mobile Money (Ghana)</h3>
+                        <div class="payment-info">
+                            <p><strong>Send payment to:</strong></p>
+                            <div class="payment-number" id="mtnNumber">
+                                +233 24 484 8036
+                                <button type="button" class="copy-btn" onclick="copyNumber('mtn')">Copy</button>
+                            </div>
+                            <p style="text-align: center; color: #999; font-size: 0.9em;">
+                                Monthly: <strong style="color: #667eea;">GH₵ 160</strong> | Yearly: <strong style="color: #667eea;">GH₵ 1,600</strong>
+                            </p>
+                        </div>
                     </div>
                     
                     <div class="payment-steps">
-                        <strong>How to subscribe:</strong>
+                        <strong>📱 How to subscribe:</strong>
                         <ol>
-                            <li>Open your Zelle app or banking app</li>
-                            <li>Send $9.99 to the number above</li>
-                            <li>Enter your email below and submit</li>
-                            <li>Your subscription will be activated within 24 hours</li>
+                            <li>Choose your payment method (Zelle or MTN)</li>
+                            <li>Send payment to the number above</li>
+                            <li>Click "Generate Activation Code" button below</li>
+                            <li>Enter the 4-digit code and click "Activate Subscription"</li>
+                            <li>Your app will be activated instantly!</li>
                         </ol>
                     </div>
                 </div>
                 
+                <!-- Activation Code Section -->
+                <div class="activation-section">
+                    <h3>🔐 Activation Code</h3>
+                    <p style="text-align: center; margin-bottom: 15px;">After sending payment, generate your activation code:</p>
+                    
+                    <button type="button" class="btn btn-primary" onclick="generateActivationCode()" style="width: 100%; margin-bottom: 15px;">
+                        🎲 Generate Activation Code
+                    </button>
+                    
+                    <div id="codeDisplay" style="display: none;">
+                        <div class="generated-code">
+                            <p style="margin-bottom: 10px;">Your Activation Code:</p>
+                            <strong id="activationCodeText"></strong>
+                            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Enter this code below to activate</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; text-align: center; margin-bottom: 10px; font-weight: 600;">Enter 4-Digit Code:</label>
+                        <div class="code-input">
+                            <input type="text" maxlength="1" class="code-digit" id="digit1" oninput="moveToNext(this, 'digit2')">
+                            <input type="text" maxlength="1" class="code-digit" id="digit2" oninput="moveToNext(this, 'digit3')">
+                            <input type="text" maxlength="1" class="code-digit" id="digit3" oninput="moveToNext(this, 'digit4')">
+                            <input type="text" maxlength="1" class="code-digit" id="digit4" oninput="checkCode()">
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-group">
-                    <label for="zelleConfirmation">Zelle Transaction ID (Optional)</label>
-                    <input type="text" id="zelleConfirmation" placeholder="Enter transaction ID for faster processing">
+                    <label for="transactionId">Transaction ID (Optional)</label>
+                    <input type="text" id="transactionId" placeholder="Enter transaction ID for reference">
                 </div>
                 
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">Subscribe Now</button>
+                    <button type="button" class="btn btn-primary" onclick="activateSubscription()" id="activateBtn">🚀 Activate Subscription</button>
                     <button type="button" class="btn btn-secondary" onclick="continueWithTrial()">Continue Trial</button>
                 </div>
             </form>
@@ -482,10 +596,13 @@
             }
         }
         
-        // Copy Zelle number to clipboard
-        function copyZelleNumber() {
-            const zelleNumber = '(555) 123-4567';
-            navigator.clipboard.writeText(zelleNumber).then(() => {
+        // Store generated code
+        let generatedCode = null;
+        
+        // Copy payment number to clipboard
+        function copyNumber(type) {
+            const number = type === 'zelle' ? '+1 (832) 349-2362' : '+233 24 484 8036';
+            navigator.clipboard.writeText(number).then(() => {
                 const btn = event.target;
                 const originalText = btn.textContent;
                 btn.textContent = 'Copied!';
@@ -497,40 +614,133 @@
             });
         }
         
-        // Handle subscription form submission
-        document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Generate random 4-digit activation code
+        function generateActivationCode() {
+            // Generate random 4-digit code
+            generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
             
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const transactionId = document.getElementById('zelleConfirmation').value;
+            // Store in localStorage for verification
+            localStorage.setItem('activationCode', generatedCode);
+            localStorage.setItem('codeGeneratedAt', new Date().toISOString());
             
-            // Store subscription details
-            const subscriptionData = {
-                email: email,
-                phone: phone,
-                transactionId: transactionId,
-                submittedAt: new Date().toISOString(),
-                status: 'pending'
-            };
-            
-            localStorage.setItem('subscriptionData', JSON.stringify(subscriptionData));
+            // Display the code
+            document.getElementById('activationCodeText').textContent = generatedCode;
+            document.getElementById('codeDisplay').style.display = 'block';
             
             // Show success message
             const successMsg = document.getElementById('successMessage');
-            successMsg.textContent = `✅ Subscription request submitted! We'll verify your payment and activate your subscription within 24 hours. A confirmation will be sent to ${email}.`;
+            successMsg.textContent = '✅ Activation code generated! Enter it below to activate your subscription.';
             successMsg.classList.add('show');
             
-            // Clear form
-            document.getElementById('subscriptionForm').reset();
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Hide message after 5 seconds
             setTimeout(() => {
                 successMsg.classList.remove('show');
-            }, 5000);
+            }, 3000);
+        }
+        
+        // Move to next input field
+        function moveToNext(current, nextId) {
+            if (current.value.length === 1) {
+                const next = document.getElementById(nextId);
+                if (next) next.focus();
+            }
+        }
+        
+        // Check if entered code matches generated code
+        function checkCode() {
+            const digit1 = document.getElementById('digit1').value;
+            const digit2 = document.getElementById('digit2').value;
+            const digit3 = document.getElementById('digit3').value;
+            const digit4 = document.getElementById('digit4').value;
+            
+            if (digit1 && digit2 && digit3 && digit4) {
+                const enteredCode = digit1 + digit2 + digit3 + digit4;
+                const storedCode = localStorage.getItem('activationCode');
+                
+                if (enteredCode === storedCode) {
+                    // Highlight code digits as correct
+                    document.querySelectorAll('.code-digit').forEach(input => {
+                        input.style.borderColor = '#4caf50';
+                        input.style.background = '#e8f5e9';
+                    });
+                } else {
+                    // Highlight as incorrect
+                    document.querySelectorAll('.code-digit').forEach(input => {
+                        input.style.borderColor = '#f44336';
+                        input.style.background = '#ffebee';
+                    });
+                }
+            }
+        }
+        
+        // Activate subscription with code verification
+        function activateSubscription() {
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const transactionId = document.getElementById('transactionId').value;
+            
+            // Validate email and phone
+            if (!email || !phone) {
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = '❌ Please enter your email and phone number.';
+                errorMsg.classList.add('show');
+                setTimeout(() => errorMsg.classList.remove('show'), 3000);
+                return;
+            }
+            
+            // Get entered code
+            const digit1 = document.getElementById('digit1').value;
+            const digit2 = document.getElementById('digit2').value;
+            const digit3 = document.getElementById('digit3').value;
+            const digit4 = document.getElementById('digit4').value;
+            const enteredCode = digit1 + digit2 + digit3 + digit4;
+            
+            // Verify code
+            const storedCode = localStorage.getItem('activationCode');
+            
+            if (!storedCode) {
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = '❌ Please generate an activation code first.';
+                errorMsg.classList.add('show');
+                setTimeout(() => errorMsg.classList.remove('show'), 3000);
+                return;
+            }
+            
+            if (enteredCode !== storedCode) {
+                const errorMsg = document.getElementById('errorMessage');
+                errorMsg.textContent = '❌ Invalid activation code. Please check and try again.';
+                errorMsg.classList.add('show');
+                setTimeout(() => errorMsg.classList.remove('show'), 3000);
+                return;
+            }
+            
+            // Activate subscription
+            localStorage.setItem('isSubscribed', 'true');
+            localStorage.setItem('subscriptionActivatedAt', new Date().toISOString());
+            localStorage.setItem('subscriptionData', JSON.stringify({
+                email: email,
+                phone: phone,
+                transactionId: transactionId,
+                activationCode: enteredCode,
+                activatedAt: new Date().toISOString()
+            }));
+            
+            // Clear activation code
+            localStorage.removeItem('activationCode');
+            
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = '🎉 Subscription activated successfully! Redirecting to app...';
+            successMsg.classList.add('show');
+            
+            // Redirect to app after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'mobile-frontend.html';
+            }, 2000);
+        }
+        
+        // Prevent form submission (we use button click instead)
+        document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
         });
         
         // Continue with trial

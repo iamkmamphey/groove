@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove App - Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Groove App - Debug Console</h1>
+    
+    <div class="test-section">
+        <h2>1. Audio System Test</h2>
+        <button onclick="testAudioContext()">Test AudioContext</button>
+        <button onclick="testMetronome()">Test Metronome Click</button>
+        <button onclick="testAudioFile()">Test Audio Loading</button>
+        <div id="audioStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. PWA Features</h2>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+        <button onclick="testManifest()">Test Manifest</button>
+        <button onclick="testInstallability()">Check PWA Install</button>
+        <div id="pwaStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Storage & State</h2>
+        <button onclick="testLocalStorage()">Test LocalStorage</button>
+        <button onclick="testSubscription()">Check Subscription</button>
+        <button onclick="clearAllData()">Clear All Data</button>
+        <div id="storageStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Network & Resources</h2>
+        <button onclick="testResources()">Test All Resources</button>
+        <button onclick="testAudioFileAccess()">Test Audio File</button>
+        <div id="networkStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Logs</h2>
+        <div id="console" style="max-height: 300px; overflow-y: auto;"></div>
+        <button onclick="clearConsole()">Clear Console</button>
+    </div>
+
+    <script>
+        // Initialize Web Audio API
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioContext = null;
+        const logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({timestamp, message, type});
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.innerHTML = logs.map(l => 
+                `<div class="status ${l.type}">[${l.timestamp}] ${l.message}</div>`
+            ).join('');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function clearConsole() {
+            logs.length = 0;
+            document.getElementById('console').innerHTML = '';
+        }
+
+        async function testAudioContext() {
+            const statusDiv = document.getElementById('audioStatus');
+            try {
+                if (!audioContext) {
+                    audioContext = new AudioContext();
+                }
+                
+                const status = audioContext.state;
+                log(`AudioContext created: state = ${status}`, 'success');
+                
+                if (status === 'suspended') {
+                    await audioContext.resume();
+                    log('AudioContext resumed successfully', 'success');
+                }
+                
+                statusDiv.innerHTML = `<div class="status success">
+                    ✅ AudioContext: ${audioContext.state}<br>
+                    Sample Rate: ${audioContext.sampleRate}Hz<br>
+                    Destination Channels: ${audioContext.destination.maxChannelCount}
+                </div>`;
+            } catch (error) {
+                log(`AudioContext error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function generateMetronomeClick() {
+            const sampleRate = audioContext.sampleRate;
+            const duration = 0.05;
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                const frequency = 1000;
+                const envelope = Math.exp(-t * 50);
+                data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope;
+            }
+            
+            return buffer;
+        }
+
+        async function testMetronome() {
+            const statusDiv = document.getElementById('audioStatus');
+            try {
+                if (!audioContext) audioContext = new AudioContext();
+                if (audioContext.state === 'suspended') await audioContext.resume();
+                
+                log('Generating metronome click sound...', 'info');
+                const clickBuffer = generateMetronomeClick();
+                log(`Click buffer created: ${clickBuffer.length} samples`, 'success');
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = clickBuffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+                
+                log('🔔 Metronome click played!', 'success');
+                statusDiv.innerHTML = `<div class="status success">✅ Metronome click sound generated and played</div>`;
+            } catch (error) {
+                log(`Metronome error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        async function testAudioFile() {
+            const statusDiv = document.getElementById('audioStatus');
+            try {
+                if (!audioContext) audioContext = new AudioContext();
+                if (audioContext.state === 'suspended') await audioContext.resume();
+                
+                log('Loading audio file...', 'info');
+                const response = await fetch('/Audio groove.mp3');
+                log(`Response status: ${response.status} ${response.statusText}`, 'info');
+                
+                const arrayBuffer = await response.arrayBuffer();
+                log(`Downloaded: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`, 'info');
+                
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                log(`Decoded: ${audioBuffer.duration.toFixed(2)}s, ${audioBuffer.numberOfChannels} channels`, 'success');
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+                
+                log('🎵 Audio playing!', 'success');
+                statusDiv.innerHTML = `<div class="status success">
+                    ✅ Audio loaded and playing<br>
+                    Duration: ${audioBuffer.duration.toFixed(2)}s<br>
+                    Channels: ${audioBuffer.numberOfChannels}<br>
+                    Sample Rate: ${audioBuffer.sampleRate}Hz
+                </div>`;
+            } catch (error) {
+                log(`Audio file error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        async function testServiceWorker() {
+            const statusDiv = document.getElementById('pwaStatus');
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    log(`Service Worker registrations: ${registrations.length}`, 'info');
+                    
+                    if (registrations.length > 0) {
+                        registrations.forEach((reg, i) => {
+                            log(`SW ${i+1}: ${reg.scope}, active: ${!!reg.active}`, 'success');
+                        });
+                        statusDiv.innerHTML = `<div class="status success">✅ ${registrations.length} Service Worker(s) registered</div>`;
+                    } else {
+                        log('No service workers registered', 'info');
+                        statusDiv.innerHTML = `<div class="status info">⚠️ No Service Workers registered</div>`;
+                    }
+                } else {
+                    log('Service Workers not supported', 'error');
+                    statusDiv.innerHTML = `<div class="status error">❌ Service Workers not supported</div>`;
+                }
+            } catch (error) {
+                log(`Service Worker error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        async function testManifest() {
+            const statusDiv = document.getElementById('pwaStatus');
+            try {
+                const response = await fetch('/manifest.json');
+                const manifest = await response.json();
+                log('Manifest loaded successfully', 'success');
+                log(`App name: ${manifest.name}`, 'info');
+                statusDiv.innerHTML = `<div class="status success">
+                    ✅ Manifest loaded<br>
+                    <pre>${JSON.stringify(manifest, null, 2)}</pre>
+                </div>`;
+            } catch (error) {
+                log(`Manifest error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function testInstallability() {
+            const statusDiv = document.getElementById('pwaStatus');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+            
+            log(`Standalone mode: ${isStandalone}`, 'info');
+            log(`iOS device: ${isIOS}`, 'info');
+            
+            statusDiv.innerHTML = `<div class="status info">
+                Display Mode: ${isStandalone ? 'Standalone (Installed)' : 'Browser'}<br>
+                Platform: ${navigator.platform}<br>
+                User Agent: ${navigator.userAgent.substring(0, 50)}...
+            </div>`;
+        }
+
+        function testLocalStorage() {
+            const statusDiv = document.getElementById('storageStatus');
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                log('LocalStorage working', 'success');
+                log(`Trial Date: ${localStorage.getItem('trialStartDate') || 'Not set'}`, 'info');
+                log(`Subscription: ${localStorage.getItem('subscriptionActive') || 'Not set'}`, 'info');
+                
+                statusDiv.innerHTML = `<div class="status success">
+                    ✅ LocalStorage working<br>
+                    Trial Start: ${localStorage.getItem('trialStartDate') || 'Not set'}<br>
+                    Subscription: ${localStorage.getItem('subscriptionActive') || 'Not set'}
+                </div>`;
+            } catch (error) {
+                log(`LocalStorage error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function testSubscription() {
+            const statusDiv = document.getElementById('storageStatus');
+            const trialDate = localStorage.getItem('trialStartDate');
+            const isActive = localStorage.getItem('subscriptionActive') === 'true';
+            
+            if (trialDate) {
+                const start = new Date(trialDate);
+                const now = new Date();
+                const daysLeft = 7 - Math.floor((now - start) / (1000 * 60 * 60 * 24));
+                
+                log(`Trial: ${daysLeft} days remaining`, daysLeft > 0 ? 'success' : 'error');
+                statusDiv.innerHTML = `<div class="status ${daysLeft > 0 ? 'success' : 'error'}">
+                    Trial Started: ${start.toLocaleDateString()}<br>
+                    Days Remaining: ${Math.max(0, daysLeft)}<br>
+                    Status: ${daysLeft > 0 ? 'Active' : 'Expired'}
+                </div>`;
+            } else {
+                log('No trial started', 'info');
+                statusDiv.innerHTML = `<div class="status info">No trial data found</div>`;
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Clear all LocalStorage data?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                log('All storage cleared', 'success');
+                document.getElementById('storageStatus').innerHTML = `<div class="status success">✅ All data cleared</div>`;
+            }
+        }
+
+        async function testResources() {
+            const statusDiv = document.getElementById('networkStatus');
+            const resources = [
+                '/manifest.json',
+                '/service-worker.js',
+                '/icon-192.png',
+                '/icon-512.png',
+                '/Audio groove.mp3',
+                '/Loop App1.png'
+            ];
+            
+            let html = '<div class="status info">Testing resources...</div>';
+            statusDiv.innerHTML = html;
+            
+            const results = [];
+            for (const url of resources) {
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    const status = response.ok ? 'success' : 'error';
+                    const size = response.headers.get('content-length');
+                    results.push(`${response.ok ? '✅' : '❌'} ${url} (${size ? (size/1024).toFixed(1) + 'KB' : response.status})`);
+                    log(`${url}: ${response.status}`, status);
+                } catch (error) {
+                    results.push(`❌ ${url} (Error)`);
+                    log(`${url}: ${error.message}`, 'error');
+                }
+            }
+            
+            statusDiv.innerHTML = `<div class="status info"><pre>${results.join('\n')}</pre></div>`;
+        }
+
+        async function testAudioFileAccess() {
+            const statusDiv = document.getElementById('networkStatus');
+            try {
+                const response = await fetch('/Audio groove.mp3');
+                const blob = await response.blob();
+                log(`Audio file: ${(blob.size / 1024).toFixed(2)} KB, type: ${blob.type}`, 'success');
+                statusDiv.innerHTML = `<div class="status success">
+                    ✅ Audio file accessible<br>
+                    Size: ${(blob.size / 1024).toFixed(2)} KB<br>
+                    Type: ${blob.type}
+                </div>`;
+            } catch (error) {
+                log(`Audio file access error: ${error.message}`, 'error');
+                statusDiv.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            log('Debug console loaded', 'success');
+            log('Click buttons to run tests', 'info');
+        });
+    </script>
+</body>
+</html>
