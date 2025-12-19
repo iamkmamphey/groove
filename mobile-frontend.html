@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Groove">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#6c5ce7">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <title>KM Percussion Groove Loops - Mobile App</title>
     <style>
         * {
@@ -661,14 +668,21 @@
                     <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 10px; align-items: end;">
                         <div>
                             <div class="category-label">Metronome</div>
-                            <div style="display: flex; gap: 8px; align-items: center; background: var(--bg-primary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                                <button onclick="adjustMetronome(-5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">−</button>
-                                <div style="flex: 1; text-align: center;">
-                                    <div id="metronomeBPM" style="font-size: 1.2em; font-weight: 600; color: var(--text-primary);">120</div>
-                                    <div style="font-size: 0.7em; color: var(--text-secondary);">BPM</div>
+                            <div style="background: var(--bg-primary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                                    <button onclick="adjustMetronome(-5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">−</button>
+                                    <div style="flex: 1; text-align: center;">
+                                        <div id="metronomeBPM" style="font-size: 1.2em; font-weight: 600; color: var(--text-primary);">120</div>
+                                        <div style="font-size: 0.7em; color: var(--text-secondary);">BPM</div>
+                                    </div>
+                                    <button onclick="adjustMetronome(5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">+</button>
+                                    <button id="metronomeToggle" onclick="toggleMetronome()" style="width: 32px; height: 32px; border: none; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 1.1em;">▶</button>
                                 </div>
-                                <button onclick="adjustMetronome(5)" style="width: 32px; height: 32px; border: none; background: var(--gradient-start); color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">+</button>
-                                <button id="metronomeToggle" onclick="toggleMetronome()" style="width: 32px; height: 32px; border: none; background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 1.1em;">▶</button>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <span style="font-size: 0.8em; color: var(--text-secondary);">🔊</span>
+                                    <input type="range" id="metronomeVolume" min="0" max="100" value="70" style="flex: 1; height: 4px;">
+                                    <span id="metronomeVolumeLabel" style="font-size: 0.7em; color: var(--text-secondary); min-width: 30px;">70%</span>
+                                </div>
                             </div>
                         </div>
                         <button class="master-eq-btn" onclick="toggleMasterEQ()" title="Master Equalizer" style="position: static; width: 48px; height: 48px; flex-shrink: 0;">🎚️</button>
@@ -824,7 +838,7 @@
             <div class="master-eq-panel" id="masterEQPanel">
                 <div class="eq-panel-header">
                     <div class="eq-panel-title">🎚️ Master Equalizer</div>
-                    <button class="close-btn" onclick="toggleMasterEQ()">✕</button>
+                    <button class="close-btn" onclick="closeMasterEQ()">✕</button>
                 </div>
                 
                 <div class="equalizer-container" style="background: var(--bg-primary); margin-top: 0;">
@@ -867,6 +881,32 @@
     </div>
     
     <script>
+        // Web Audio API setup
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        const audioBuffers = new Map();
+        const activeSources = new Map();
+        
+        // Generate metronome click sound using Web Audio API
+        function generateMetronomeClick() {
+            const sampleRate = audioContext.sampleRate;
+            const duration = 0.05; // 50ms click
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            // Generate click sound (short beep at 1000Hz with fast decay)
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                const frequency = 1000;
+                const envelope = Math.exp(-t * 50); // Fast exponential decay
+                data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope;
+            }
+            
+            return buffer;
+        }
+        
+        const metronomeClickBuffer = generateMetronomeClick();
+        
         // Synchronized audio playback system
         const audioEngine = {
             masterTime: 0,
@@ -930,27 +970,77 @@
             setTimeout(() => button.style.transform = '', 100);
         }
         
-        function togglePlay(button) {
+        async function loadAudioFile(url) {
+            if (audioBuffers.has(url)) {
+                return audioBuffers.get(url);
+            }
+            
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                audioBuffers.set(url, audioBuffer);
+                return audioBuffer;
+            } catch (error) {
+                console.error('Error loading audio:', error);
+                return null;
+            }
+        }
+        
+        async function togglePlay(button) {
             const card = button.closest('.instrument-card');
-            const instrumentName = card.querySelector('.card-title h3').textContent;
+            const instrumentName = card.querySelector('.card-title h3').textContent.split(' ')[0]; // Remove time signature badge
             const playBtn = button;
+            const volumeSlider = card.querySelector('.volume-slider input[type="range"]');
+            const volume = volumeSlider ? volumeSlider.value / 100 : 0.9;
+            
+            // Resume audio context if needed (browser autoplay policy)
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
             
             if (playBtn.textContent === '▶') {
                 // Start playing
                 playBtn.textContent = '⏸';
                 playBtn.classList.add('playing');
                 card.classList.add('playing');
-                audioEngine.addSound(instrumentName);
                 
-                // Simulate audio with a longer loop
-                console.log(`🎵 ${instrumentName} started playing in sync`);
+                // Try to load and play actual audio
+                const audioUrl = '/Audio groove.mp3';
+                const buffer = await loadAudioFile(audioUrl);
+                
+                if (buffer) {
+                    const source = audioContext.createBufferSource();
+                    const gainNode = audioContext.createGain();
+                    
+                    source.buffer = buffer;
+                    source.loop = true; // Loop the audio
+                    gainNode.gain.value = volume;
+                    
+                    source.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    source.start(0);
+                    
+                    activeSources.set(instrumentName, { source, gainNode });
+                    console.log(`🔊 ${instrumentName} playing at ${(volume * 100).toFixed(0)}% volume`);
+                } else {
+                    console.log(`⚠️ ${instrumentName} audio file not found - simulated playback`);
+                }
+                
+                audioEngine.addSound(instrumentName);
             } else {
                 // Stop playing
                 playBtn.textContent = '▶';
                 playBtn.classList.remove('playing');
                 card.classList.remove('playing');
-                audioEngine.removeSound(instrumentName);
                 
+                const audioSource = activeSources.get(instrumentName);
+                if (audioSource) {
+                    audioSource.source.stop();
+                    activeSources.delete(instrumentName);
+                }
+                
+                audioEngine.removeSound(instrumentName);
                 console.log(`⏹️ ${instrumentName} stopped`);
             }
         }
@@ -1042,6 +1132,15 @@
             setTimeout(() => banner.remove(), 5000);
         }
         
+        // Metronome volume control
+        const metronomeVolumeSlider = document.getElementById('metronomeVolume');
+        if (metronomeVolumeSlider) {
+            metronomeVolumeSlider.addEventListener('input', (e) => {
+                const label = document.getElementById('metronomeVolumeLabel');
+                label.textContent = e.target.value + '%';
+            });
+        }
+        
         // Check subscription on page load
         window.addEventListener('load', () => {
             checkSubscriptionStatus();
@@ -1054,9 +1153,14 @@
             panel.classList.toggle('open');
         }
         
+        function closeMasterEQ() {
+            const panel = document.getElementById('masterEQPanel');
+            panel.classList.remove('open');
+        }
+        
         function applyMasterEQ() {
             console.log('🎚️ Master EQ applied');
-            toggleMasterEQ(); // Close the panel
+            closeMasterEQ(); // Close the panel
         }
         
         function resetMasterEQ() {
@@ -1169,6 +1273,29 @@
         }
         
         function playMetronomeClick() {
+            // Resume audio context if suspended (browser autoplay policy)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            // Create audio source for click
+            const source = audioContext.createBufferSource();
+            const gainNode = audioContext.createGain();
+            
+            source.buffer = metronomeClickBuffer;
+            
+            // Get metronome volume (0-100 to 0-1)
+            const volumeSlider = document.getElementById('metronomeVolume');
+            const volume = volumeSlider ? volumeSlider.value / 100 : 0.7;
+            gainNode.gain.value = volume;
+            
+            // Connect: source -> gain -> destination
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Play the click
+            source.start(0);
+            
             // Visual feedback
             const bpmDisplay = document.getElementById('metronomeBPM');
             bpmDisplay.style.transform = 'scale(1.1)';
@@ -1178,9 +1305,25 @@
                 bpmDisplay.style.color = 'var(--text-primary)';
             }, 100);
             
-            // In a real app, play actual metronome sound here
-            console.log('🔔 Click');
+            console.log('🔔 Click at ' + (volume * 100).toFixed(0) + '% volume');
         }
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('✅ Service Worker registered'))
+                    .catch(err => console.log('❌ Service Worker registration failed:', err));
+            });
+        }
+        
+        // Prompt to install PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('💾 App can be installed');
+        });
     </script>
 </body>
 </html>
